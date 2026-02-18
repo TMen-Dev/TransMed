@@ -1,0 +1,7 @@
+{
+  "name": "transmed",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}

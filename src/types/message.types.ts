@@ -1,0 +1,21 @@
+// src/types/message.types.ts
+
+import type { RoleUtilisateur } from './user.types'
+
+export interface Message {
+  id: string
+  demandeId: string
+  auteurId: string
+  auteurPrenom: string
+  auteurRole: RoleUtilisateur
+  contenu: string // 1–1000 caractères
+  createdAt: string
+}
+
+export interface SendMessageDto {
+  demandeId: string
+  auteurId: string
+  auteurPrenom: string
+  auteurRole: RoleUtilisateur
+  contenu: string
+}
