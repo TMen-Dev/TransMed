@@ -1,7 +1,7 @@
 # Tasks: TransMed — Mise en relation patients-aidants pour médicaments
 
 **Input**: Design documents from `/specs/001-medication-relay/`
-**Branch**: `001-medication-relay` | **Date**: 2026-02-18
+**Branch**: `master` | **Created**: 2026-02-18 | **Updated**: 2026-02-27
 **Prerequisites**: plan.md ✓ spec.md ✓ data-model.md ✓ contracts/ ✓ research.md ✓ quickstart.md ✓
 
 **Tests**: Non demandés — aucune tâche de test générée (TDD optionnel à ajouter ultérieurement).
@@ -203,6 +203,19 @@
 
 ---
 
+## Phase 9: Refonte UI — Design System TransMed v2 (2026-02-27)
+
+**But**: Refonte visuelle complète — identité cohérente, animations CSS, palette sable × vert × terracotta. Aucun changement fonctionnel.
+
+- [x] T076 [P] Créer le design system global dans `src/App.vue` (non-scopé) : tokens CSS sur `:root` (palette complète, ombres, rayons), overrides Ionic (toolbar, tab-bar, FAB, modal, boutons, content, spinner), 12 keyframes réutilisables (`tmPageEnter`, `tmFadeUp`, `tmFadeIn`, `tmPop`, `tmSlideRight`, `tmFloat`, `tmPulseRing`, `tmGoldPulseRing`, `tmCelebrate`, `tmShimmer`, `tmShake`, `tmMessageIn`, `tmFabPulse`, `tmBounceIn`, `tmStarBurst`)
+- [x] T077 [P] Refactorer les 9 composants avec le design system : `DemandeCard` (accent left-border coloré par statut), `StatutBadge` (badge custom + dot animé), `StatutTimeline` (timeline horizontale connectors animés), `CagnotteProgress` (progress + shimmer + célébration gold), `MessageBubble` (bulles green/blanc), `ContributionForm` (input natif stylisé), `PropositionPanel` (3 actions colorées), `MedicamentItem` (item + icône green), `OrdonanceUploader` (zone dashed upload stylisée)
+- [x] T078 [P] Refactorer les 7 vues avec le design system : `InscriptionView` (logo + card + role-cards natifs), `ListeDemandesView` (skeleton wave, empty state SVG + tmFloat, pull-to-refresh FR-027, bouton logout FR-028), `DetailDemandeView` (sections animées staggered, skeleton), `CreationDemandeView` (form sections avec icons colorés), `ChatView` (dot-grid background, footer input stylisé), `AProposView` (hero + timeline verticale 6 étapes), `TabsView` (tab-icon scale on select)
+- [x] T079 Corriger bugs `InscriptionView` : remplacer `<ion-radio>` par `<button>` natif avec `selectRole()` (FR-002 propagation events Ionic 7), ajouter computed `formValide`, hardcoder couleurs bouton submit (`#1B8C5A` / `#8FC9AF` disabled) pour éviter conflits CSS scoped
+
+**Checkpoint Design** : `npm run build` ✅ sans erreur TypeScript — 79 tâches complètes.
+
+---
+
 ## Dépendances & ordre d'exécution
 
 ### Dépendances entre phases
@@ -290,8 +303,9 @@ Chaque phase ajoute de la valeur sans casser les phases précédentes.
 | 6 — US4 (P4) | Aidant livre | T058–T059 | `DetailDemandeView` (bouton livraison) |
 | 7 — Chat | FR-013/FR-014 | T060–T067 | `MockMessageService`, `chat.store`, `ChatView` |
 | 8 — Polish | — | T068–T075 | `AProposView`, états vides, validations, smoke test |
+| 9 — Design System | — | T076–T079 | `App.vue`, 9 composants, 7 vues, fix bugs inscription |
 
-**Total** : **75 tâches** | **Opportunités parallèles** : 8 groupes identifiés
+**Total** : **79 tâches** | **Toutes complétées** ✅ | **Opportunités parallèles** : 8 groupes identifiés
 
 ---
 

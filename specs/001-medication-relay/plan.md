@@ -1,6 +1,6 @@
 # Implementation Plan: Mise en relation patients-aidants pour médicaments
 
-**Branch**: `001-medication-relay` | **Date**: 2026-02-18 | **Spec**: [spec.md](./spec.md)
+**Branch**: `master` | **Created**: 2026-02-18 | **Updated**: 2026-02-27 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-medication-relay/spec.md`
 
 ## Summary
@@ -159,3 +159,39 @@ IonModal                → CreationDemandeView (depuis ListeDemandesView, Patie
 ## Complexity Tracking
 
 Aucune violation de constitution — tableau non requis.
+
+---
+
+## Phase 9: Refonte UI — Design System TransMed v2 (2026-02-27)
+
+**But**: Refonte visuelle complète pour une identité cohérente, moderne et adaptée au contexte médical solidaire africain. Aucun changement fonctionnel — uniquement l'expérience visuelle et les animations.
+
+**Palette** : vert médical (#1B8C5A) × terracotta solidarité (#C8521A) × sable chaud (#F7F3ED) × bleu info (#2B7CC1) × gold cagnotte (#C9820A).
+
+### Fichiers impactés
+
+```text
+src/App.vue                        ← design system global (tokens, keyframes, overrides Ionic)
+src/components/ (9 composants)     ← boutons natifs, SVG custom, animations staggered
+src/views/ (7 vues)                ← états vides SVG, skeleton loading, pull-to-refresh, logout
+```
+
+### Nouvelles exigences couvertes
+
+| FR | Description | Statut |
+|----|-------------|--------|
+| FR-025 | Prénom obligatoire à l'inscription (déjà dans T022, bug radio buttons corrigé) | ✅ |
+| FR-027 | Pull-to-refresh sur la liste des demandes | ✅ |
+| FR-028 | Bouton déconnexion depuis la liste des demandes | ✅ |
+| US5 | Page "À propos" avec 6 étapes illustrées | ✅ |
+
+### Décisions de design
+
+- **Boutons natifs HTML** (`<button>`) au lieu de `<ion-radio>` pour les cartes de rôle — évite les bugs de propagation d'événements Ionic 7.
+- **Couleurs hardcodées** (`#1B8C5A`) dans `<style scoped>` pour les boutons submit — `var()` ne se résout pas dans un scope Ionic.
+- **Keyframes globaux** dans `App.vue <style>` (non-scopé) — réutilisés par toutes les vues.
+- **SVG custom** partout (pas d'Ionicons dans les composants critiques) — contrôle total sur le style et l'animation.
+
+### Résultat
+
+Build `npm run build` ✅ — 75 tâches d'origine complètes + 4 tâches design (T076–T079).
