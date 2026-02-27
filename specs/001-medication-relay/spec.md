@@ -1,8 +1,9 @@
 # Feature Specification: Mise en relation patients-aidants pour médicaments
 
-**Feature Branch**: `001-medication-relay`
+**Feature Branch**: `master`
 **Created**: 2026-02-18
-**Status**: Draft
+**Updated**: 2026-02-27
+**Status**: Implemented — MVP (données mockées)
 **Input**: User description: "Je veux créer une application mobile moderne ayant pour but de mettre en relation des patients ayant besoin de médicaments avec des aidants (acheteurs et/ou transporteurs). Pour l'instant les données sont mockées."
 
 ## User Scenarios & Testing *(mandatory)*
@@ -59,6 +60,8 @@ Un patient suit en temps réel la progression de sa demande à travers les 8 sta
 
 ### User Story 4 - Aidant marque la livraison comme effectuée (Priority: P4)
 
+
+
 Après avoir remis les médicaments au patient, l'aidant ayant fait une Prop3 (achat + transport) marque la demande comme livrée, ce qui clôture la demande au statut 8.
 
 **Why this priority**: Clôture le cycle complet et met à jour le statut final visible par le patient. Dépend des histoires P1, P2 et P3.
@@ -69,6 +72,21 @@ Après avoir remis les médicaments au patient, l'aidant ayant fait une Prop3 (a
 
 1. **Given** un aidant (Prop3) avec une demande au statut 7, **When** il appuie sur "Médicaments livrés", **Then** la demande passe au statut 8 (`traitee`) et disparaît de sa liste de demandes actives.
 2. **Given** une demande au statut 8, **When** le patient consulte son historique, **Then** il voit le statut "Traitée" et la date de livraison.
+
+---
+
+### User Story 5 - Utilisateur découvre le fonctionnement de l'application (Priority: P5)
+
+Un nouvel utilisateur (patient ou aidant) qui ne comprend pas encore comment fonctionne l'application consulte la page "À propos" pour comprendre les 6 étapes du cycle de vie d'une demande, depuis la création jusqu'à la livraison.
+
+**Why this priority**: Facilite l'adoption par les nouveaux utilisateurs et réduit les questions de support. Non bloquant pour le flux principal.
+
+**Independent Test**: Peut être testé indépendamment en vérifiant que la page "À propos" est accessible depuis la navigation principale et affiche les 6 étapes dans le bon ordre.
+
+**Acceptance Scenarios**:
+
+1. **Given** un utilisateur sur l'application, **When** il accède à la section "À propos", **Then** il voit les 6 étapes du fonctionnement (création demande → mobilisation aidants → financement → confirmation → livraison → clôture) avec une description claire de chaque étape.
+2. **Given** un utilisateur sur la page "À propos", **When** il la consulte, **Then** il comprend le contexte géographique (patients en Algérie, médicaments disponibles en France) et le caractère bénévole de l'aide.
 
 ---
 
@@ -122,7 +140,7 @@ Après avoir remis les médicaments au patient, l'aidant ayant fait une Prop3 (a
 - **FR-014**: Les messages du chat DOIVENT être associés à une demande spécifique et afficher l'auteur (patient ou aidant) ainsi que l'horodatage.
 - **FR-015**: La couche d'accès aux données DOIT être abstraite derrière une interface unique, de sorte que le remplacement des données mockées par un backend réel ne nécessite aucune modification des vues ni de la logique métier.
 - **FR-016**: Le patient DOIT obligatoirement joindre une ordonnance (fichier image ou PDF) à sa demande — sans ordonnance, la soumission du formulaire est bloquée.
-- **FR-017**: L'ordonnance associée à une demande DOIT être téléchargeable uniquement par les aidants ayant le rôle "acheteur".
+- **FR-017**: L'ordonnance associée à une demande DOIT être consultable uniquement par les aidants ayant soumis une proposition d'achat (Prop1 ou Prop3) sur cette demande. Les aidants sans proposition active sur la demande n'ont pas accès à l'ordonnance.
 - **FR-018**: Chaque demande DOIT disposer d'une cagnotte affichant un montant cible et le montant déjà collecté.
 - **FR-019**: Seuls les aidants inscrits PEUVENT contribuer financièrement à la cagnotte d'une demande.
 - **FR-020**: Le système DOIT afficher en temps réel (ou au rechargement en mode mocked) la progression de la cagnotte (montant collecté / montant cible).
@@ -130,6 +148,10 @@ Après avoir remis les médicaments au patient, l'aidant ayant fait une Prop3 (a
 - **FR-022**: Tant que le montant cible n'a pas été défini par un acheteur, la cagnotte est affichée comme "En attente d'évaluation" et les contributions (Prop1) sont bloquées.
 - **FR-023**: Seul un aidant de rôle acheteur peut saisir le montant cible de la cagnotte depuis l'écran de détail de la demande. Cette action déverrouille les Prop1.
 - **FR-024**: Une fois le transporteur assigné (Prop2), toute nouvelle Prop2 sur la même demande est refusée — un seul transporteur par demande.
+- **FR-025**: L'utilisateur DOIT renseigner son prénom lors de sa première connexion, en complément de la sélection de son rôle (patient ou aidant). Le prénom est utilisé pour identifier l'utilisateur dans les échanges (chat, liste des aidants engagés).
+- **FR-026**: L'application DOIT proposer une section "À propos" accessible depuis la navigation principale, présentant le fonctionnement de l'application en 6 étapes illustrées, le contexte géographique et la nature bénévole du service.
+- **FR-027**: L'utilisateur DOIT pouvoir rafraîchir manuellement la liste des demandes pour obtenir les données les plus récentes.
+- **FR-028**: L'utilisateur DOIT pouvoir se déconnecter depuis la liste des demandes, ce qui le renvoie à l'écran de sélection du profil.
 
 ### Key Entities
 
@@ -152,6 +174,7 @@ Après avoir remis les médicaments au patient, l'aidant ayant fait une Prop3 (a
 - **SC-003**: Le statut d'une demande est visible et à jour pour le patient immédiatement après l'action de l'aidant (ou au rechargement de la vue en mode mocked).
 - **SC-004**: 100 % des flux principaux (création, acceptation, livraison) sont fonctionnels avec les données mockées sans erreur bloquante.
 - **SC-005**: Les deux profils utilisateurs (Patient / Aidant) disposent de vues clairement séparées et adaptées à leur rôle respectif.
+- **SC-006**: L'intégralité du cycle MVP (inscription → création demande → proposition aidant → confirmation patient → livraison → clôture) peut être démontrée de bout en bout sans erreur bloquante avec les données mockées.
 
 ## Clarifications
 
@@ -173,3 +196,5 @@ Après avoir remis les médicaments au patient, l'aidant ayant fait une Prop3 (a
 - **Notifications**: Pas de notifications push pour le MVP ; le patient rafraîchit manuellement ou la vue se met à jour à l'ouverture.
 - **Plusieurs aidants par demande**: Une demande peut recevoir des propositions de plusieurs aidants simultanément (ex. plusieurs Prop1 pour la cagnotte, un Prop2 pour le transport). C'est la combinaison des propositions qui fait progresser le statut.
 - **Données mockées → base de données** : Le MVP utilise des données mockées localement. L'architecture de la couche d'accès aux données doit être conçue pour permettre un remplacement transparent par un vrai backend (base de données + API) sans refonte des composants UI ni des flux métier. Toutes les entités (Patient, Aidant, Demande, Message) sont à terme persistées côté serveur.
+- **Déconnexion** : La déconnexion est disponible depuis la liste des demandes et renvoie l'utilisateur à l'écran d'inscription. En mode mocked, aucune session persistante n'est gérée — la déconnexion réinitialise simplement l'état local.
+- **Navigation principale** : L'application est structurée avec une barre de navigation en bas à deux onglets ("Demandes" et "À propos"), accessible dès que l'utilisateur est connecté.
