@@ -15,31 +15,23 @@ const TRANSITIONS: Record<StatutDemande, Partial<Record<TypeEvenement, StatutDem
     prop2_transport: 'transporteur_disponible',
     prop3_achat_transport: 'pret_acceptation_patient',
   },
-  attente_fonds: {
-    // a un transporteur, attend les fonds
-    prop1_contribution: 'attente_fonds',
-    prop1_cagnotte_atteinte: 'pret_acceptation_patient', // transporteur déjà là → statut 6
-    prop3_achat_transport: 'pret_acceptation_patient',
-  },
-  attente_transporteur: {
-    // a les fonds, attend un transporteur
-    prop2_transport: 'pret_acceptation_patient', // fonds déjà là → statut 6
-    prop3_achat_transport: 'pret_acceptation_patient',
-  },
   fonds_atteints: {
     prop2_transport: 'pret_acceptation_patient',
     prop3_achat_transport: 'pret_acceptation_patient',
   },
   transporteur_disponible: {
     prop1_contribution: 'transporteur_disponible',
-    prop1_cagnotte_atteinte: 'pret_acceptation_patient', // fonds maintenant atteints → statut 6
+    prop1_cagnotte_atteinte: 'pret_acceptation_patient',
     prop3_achat_transport: 'pret_acceptation_patient',
   },
   pret_acceptation_patient: {
-    patient_confirme: 'en_cours_livraison',
+    patient_confirme_livraison: 'livraison_confirmee', // FR-213
   },
-  en_cours_livraison: {
-    aidant_livre: 'traitee',
+  livraison_confirmee: {
+    transporteur_livre: 'livree', // FR-214
+  },
+  livree: {
+    patient_recoit_medicaments: 'traitee', // FR-215
   },
   traitee: {}, // état terminal — aucune transition
 }

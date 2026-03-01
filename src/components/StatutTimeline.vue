@@ -6,29 +6,46 @@
         :key="etape.statut"
         class="timeline-step"
         :class="{
-          'is-done':    statutIndex(etape.statut) < statutIndex(statut),
+          'is-done': isEtapeDone(etape.statut),
           'is-current': etape.statut === statut,
-          'is-future':  statutIndex(etape.statut) > statutIndex(statut),
+          'is-future': !isEtapeDone(etape.statut) && etape.statut !== statut,
         }"
       >
         <!-- Ligne connecteur -->
-        <div v-if="idx < ETAPES.length - 1" class="connector">
+        <div
+          v-if="idx < ETAPES.length - 1"
+          class="connector"
+        >
           <div
             class="connector-fill"
-            :class="{ 'filled': statutIndex(etape.statut) < statutIndex(statut) }"
+            :class="{ 'filled': isEtapeDone(etape.statut) }"
           />
         </div>
 
         <!-- Point -->
         <div class="step-dot">
-          <svg v-if="statutIndex(etape.statut) < statutIndex(statut)" width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M20 6L9 17l-5-5" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            v-if="isEtapeDone(etape.statut)"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M20 6L9 17l-5-5"
+              stroke="white"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <span v-else>{{ etape.numero }}</span>
         </div>
 
         <!-- Label -->
-        <div class="step-label">{{ etape.label }}</div>
+        <div class="step-label">
+          {{ etape.label }}
+        </div>
       </div>
     </div>
   </div>
@@ -37,30 +54,45 @@
 <script setup lang="ts">
 import type { StatutDemande } from '../types/demande.types'
 
-defineProps<{ statut: StatutDemande }>()
+const props = defineProps<{
+  statut: StatutDemande
+  cagnotte?: { montantCollecte: number; montantCible?: number } | null
+}>()
 
 const ETAPES: { statut: StatutDemande; label: string; numero: number }[] = [
-  { statut: 'attente_fonds_et_transporteur', label: 'En attente', numero: 1 },
-  { statut: 'fonds_atteints',                label: 'Financé',    numero: 2 },
+  { statut: 'attente_fonds_et_transporteur', label: 'En attente',   numero: 1 },
+  { statut: 'fonds_atteints',                label: 'Financé',      numero: 2 },
   { statut: 'transporteur_disponible',        label: 'Transporteur', numero: 3 },
-  { statut: 'pret_acceptation_patient',       label: 'Confirmer', numero: 4 },
-  { statut: 'en_cours_livraison',             label: 'Livraison', numero: 5 },
-  { statut: 'traitee',                        label: 'Traité',    numero: 6 },
+  { statut: 'pret_acceptation_patient',       label: 'Prêt',        numero: 4 },
+  { statut: 'livraison_confirmee',            label: 'Confirmé',    numero: 5 },
+  { statut: 'livree',                         label: 'Livré',       numero: 6 },
+  { statut: 'traitee',                        label: 'Traité',      numero: 7 },
 ]
 
 const ORDRE: StatutDemande[] = [
   'attente_fonds_et_transporteur',
-  'attente_fonds',
-  'attente_transporteur',
   'fonds_atteints',
   'transporteur_disponible',
   'pret_acceptation_patient',
-  'en_cours_livraison',
+  'livraison_confirmee',
+  'livree',
   'traitee',
 ]
 
 function statutIndex(s: StatutDemande): number {
   return ORDRE.indexOf(s)
+}
+
+/**
+ * FR-110 — L'étape "Financé" (fonds_atteints) est marquée done uniquement si
+ * le montant collecté atteint réellement le montant cible, indépendamment du statut.
+ */
+function isEtapeDone(etapeStatut: StatutDemande): boolean {
+  if (etapeStatut === 'fonds_atteints') {
+    if (!props.cagnotte?.montantCible) return false
+    return props.cagnotte.montantCollecte >= props.cagnotte.montantCible
+  }
+  return statutIndex(etapeStatut) < statutIndex(props.statut)
 }
 </script>
 

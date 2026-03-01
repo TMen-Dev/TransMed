@@ -1,10 +1,33 @@
 <template>
   <div class="med-item">
     <div class="med-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="2" width="16" height="20" rx="3" stroke="currentColor" stroke-width="2"/>
-        <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <rect
+          x="4"
+          y="2"
+          width="16"
+          height="20"
+          rx="3"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M8 10h8M8 14h5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <circle
+          cx="12"
+          cy="6"
+          r="1.5"
+          fill="currentColor"
+        />
       </svg>
     </div>
     <span class="med-nom">{{ medicament.nom }}</span>

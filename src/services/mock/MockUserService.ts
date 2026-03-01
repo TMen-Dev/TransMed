@@ -2,7 +2,7 @@
 
 import type { IUserService } from '../interfaces/IUserService'
 import type { Utilisateur, CreateUtilisateurDto } from '../../types/user.types'
-import { MOCK_USERS } from './data/users.mock'
+import { MOCK_USERS, MOCK_CREDENTIALS } from './data/users.mock'
 
 export class MockUserService implements IUserService {
   private users: Utilisateur[] = [...MOCK_USERS]
@@ -28,5 +28,15 @@ export class MockUserService implements IUserService {
     }
     this.users.push(utilisateur)
     return { ...utilisateur }
+  }
+
+  async authenticate(email: string, password: string): Promise<Utilisateur> {
+    const credential = MOCK_CREDENTIALS.find(
+      (c) => c.email.toLowerCase() === email.toLowerCase().trim() && c.password === password
+    )
+    if (!credential) throw new Error('Identifiants incorrects. Vérifiez votre email et mot de passe.')
+    const user = this.users.find((u) => u.id === credential.userId)
+    if (!user) throw new Error('Identifiants incorrects.')
+    return { ...user }
   }
 }

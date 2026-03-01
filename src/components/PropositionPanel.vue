@@ -1,18 +1,34 @@
 <template>
   <div class="proposition-panel">
     <div class="panel-header">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       <span>Proposer mon aide</span>
     </div>
 
     <!-- Définir montant cible -->
-    <div v-if="cagnotte && cagnotte.statut === 'en_attente_evaluation'" class="definir-section">
+    <div
+      v-if="cagnotte && cagnotte.statut === 'en_attente_evaluation'"
+      class="definir-section"
+    >
       <p class="info-text">
         En tant qu'acheteur, définissez le montant nécessaire pour l'achat.
       </p>
-      <div class="amount-input-wrap" :class="{ focused: montantFocused }">
+      <div
+        class="amount-input-wrap"
+        :class="{ focused: montantFocused }"
+      >
         <span class="euro-sym">€</span>
         <input
           v-model.number="montantCible"
@@ -22,69 +38,192 @@
           min="1"
           @focus="montantFocused = true"
           @blur="montantFocused = false"
-        />
+        >
       </div>
-      <button class="action-btn green" type="button" @click="handleDefinirMontant">
+      <button
+        class="action-btn green"
+        type="button"
+        @click="handleDefinirMontant"
+      >
         Définir le montant cible
       </button>
-      <div class="divider"><span>ou</span></div>
+      <div class="divider">
+        <span>ou</span>
+      </div>
     </div>
 
     <!-- Prop1 : Cagnotte -->
-    <div v-if="canProp1 && cagnotte && cagnotte.statut !== 'en_attente_evaluation'" class="prop-section">
+    <div
+      v-if="canProp1 && cagnotte && cagnotte.statut !== 'en_attente_evaluation'"
+      class="prop-section"
+    >
       <button
         class="action-btn outline-green"
         type="button"
         @click="showContribForm = !showContribForm"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2C10.34 2 9 3.34 9 5H4v2h1l1 12h12l1-12h1V5h-5c0-1.66-1.34-3-3-3z" stroke="currentColor" stroke-width="1.8" fill="none"/>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M12 2C10.34 2 9 3.34 9 5H4v2h1l1 12h12l1-12h1V5h-5c0-1.66-1.34-3-3-3z"
+            stroke="currentColor"
+            stroke-width="1.8"
+            fill="none"
+          />
         </svg>
         Contribuer à la cagnotte
-        <svg class="chevron" :class="{ open: showContribForm }" width="14" height="14" viewBox="0 0 24 24" fill="none">
-          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <svg
+          class="chevron"
+          :class="{ open: showContribForm }"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M6 9l6 6 6-6"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
-      <div v-if="showContribForm" class="contrib-form-wrap">
+      <div
+        v-if="showContribForm"
+        class="contrib-form-wrap"
+      >
         <ContributionForm @submit="handleProp1" />
       </div>
     </div>
 
     <!-- Prop2 : Transport -->
-    <div v-if="canProp2" class="prop-section">
-      <button class="action-btn outline-blue" type="button" @click="handleProp2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-          <circle cx="5.5" cy="18.5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
-          <circle cx="18.5" cy="18.5" r="2.5" stroke="currentColor" stroke-width="1.8"/>
+    <div
+      v-if="canProp2"
+      class="prop-section"
+    >
+      <button
+        class="action-btn outline-blue"
+        type="button"
+        @click="handleProp2"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+          <circle
+            cx="5.5"
+            cy="18.5"
+            r="2.5"
+            stroke="currentColor"
+            stroke-width="1.8"
+          />
+          <circle
+            cx="18.5"
+            cy="18.5"
+            r="2.5"
+            stroke="currentColor"
+            stroke-width="1.8"
+          />
         </svg>
         Proposer le transport
       </button>
     </div>
 
     <!-- Prop3 : Achat + Transport -->
-    <div v-if="canProp3" class="prop-section">
-      <button class="action-btn terra" type="button" @click="handleProp3">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
-          <path d="M3 6h18M16 10a4 4 0 01-8 0" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    <div
+      v-if="canProp3"
+      class="prop-section"
+    >
+      <button
+        class="action-btn terra"
+        type="button"
+        @click="handleProp3"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"
+            stroke="white"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M3 6h18M16 10a4 4 0 01-8 0"
+            stroke="white"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
         </svg>
         Acheter et transporter
       </button>
     </div>
 
     <!-- Feedback -->
-    <div v-if="erreur" class="feedback erreur">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <div
+      v-if="erreur"
+      class="feedback erreur"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M12 8v4M12 16h.01"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       {{ erreur }}
     </div>
-    <div v-if="succes" class="feedback succes">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-        <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <div
+      v-if="succes"
+      class="feedback succes"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M9 12l2 2 4-4"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       {{ succes }}
     </div>

@@ -25,15 +25,17 @@
     "@capacitor/status-bar": "^5.0.0",
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
-    "pinia-plugin-persistedstate": "^4.0.0",
     "ionicons": "^7.0.0",
     "pinia": "^2.1.0",
+    "pinia-plugin-persistedstate": "^4.0.0",
     "vue": "^3.4.0",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^5.0.0",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.0",
     "cypress": "^13.0.0",

@@ -1,10 +1,23 @@
 <template>
-  <div class="bubble-wrapper" :class="{ 'is-mine': isMine }">
-    <div v-if="!isMine" class="avatar">{{ message.auteurPrenom[0] }}</div>
+  <div
+    class="bubble-wrapper"
+    :class="{ 'is-mine': isMine }"
+  >
+    <div
+      v-if="!isMine"
+      class="avatar"
+    >
+      {{ message.auteurPrenom[0] }}
+    </div>
     <div class="bubble">
-      <p class="contenu">{{ message.contenu }}</p>
+      <p class="contenu">
+        {{ message.contenu }}
+      </p>
       <div class="meta">
-        <span v-if="!isMine" class="auteur">{{ message.auteurPrenom }}</span>
+        <span
+          v-if="!isMine"
+          class="auteur"
+        >{{ message.auteurPrenom }}</span>
         <span class="horodatage">{{ formatDate(message.createdAt) }}</span>
       </div>
     </div>

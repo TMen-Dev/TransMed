@@ -3,10 +3,13 @@
 import type { Demande } from '../../../types/demande.types'
 
 export const MOCK_DEMANDES: Demande[] = [
+  // ── demande-001 : transporteur_disponible (Alice, cagnotte 45/120€, Leila transporteur)
   {
     id: 'demande-001',
     patientId: 'patient-alice',
     patientPrenom: 'Alice',
+    nom: 'Alice — Alger',
+    urgente: false,
     medicaments: [
       { nom: 'Doliprane 1000mg', quantite: 2 },
       { nom: 'Amoxicilline 500mg', quantite: 1 },
@@ -39,10 +42,14 @@ export const MOCK_DEMANDES: Demande[] = [
     createdAt: '2026-01-18T08:00:00.000Z',
     updatedAt: '2026-01-21T15:00:00.000Z',
   },
+
+  // ── demande-002 : attente_fonds_et_transporteur (Alice, sans proposition)
   {
     id: 'demande-002',
     patientId: 'patient-alice',
     patientPrenom: 'Alice',
+    nom: 'Alice — Alger',
+    urgente: true,
     medicaments: [{ nom: 'Metformine 850mg', quantite: 3 }],
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
     statut: 'attente_fonds_et_transporteur',
@@ -51,5 +58,180 @@ export const MOCK_DEMANDES: Demande[] = [
     propositions: [],
     createdAt: '2026-02-01T14:00:00.000Z',
     updatedAt: '2026-02-01T14:00:00.000Z',
+  },
+
+  // ── demande-003 : attente_fonds_et_transporteur (Karim, sans proposition)
+  {
+    id: 'demande-003',
+    patientId: 'patient-karim',
+    patientPrenom: 'Karim',
+    nom: 'Karim — Oran',
+    urgente: false,
+    medicaments: [
+      { nom: 'Insuline Glargine', quantite: 2 },
+      { nom: 'Seringues 1ml', quantite: 10 },
+    ],
+    adresseLivraison: '12 boulevard Krim Belkacem, Oran, Algérie',
+    statut: 'attente_fonds_et_transporteur',
+    ordonanceId: 'ordonance-003',
+    cagnotteId: 'cagnotte-003',
+    propositions: [],
+    createdAt: '2026-02-10T09:00:00.000Z',
+    updatedAt: '2026-02-10T09:00:00.000Z',
+  },
+
+  // ── demande-004 : fonds_atteints (Alice, cagnotte pleine 150/150€, attend transporteur)
+  {
+    id: 'demande-004',
+    patientId: 'patient-alice',
+    patientPrenom: 'Alice',
+    nom: 'Alice — Alger',
+    urgente: false,
+    medicaments: [
+      { nom: 'Amlodipine 5mg', quantite: 1 },
+      { nom: 'Atorvastatine 40mg', quantite: 1 },
+    ],
+    adresseLivraison: '5 rue des Lilas, Alger, Algérie',
+    statut: 'fonds_atteints',
+    ordonanceId: 'ordonance-004',
+    cagnotteId: 'cagnotte-004',
+    propositions: [
+      {
+        id: 'prop-003',
+        demandeId: 'demande-004',
+        aidantId: 'aidant-ben',
+        aidantPrenom: 'Benjamin',
+        type: 'prop1_cagnotte',
+        montantContribue: 150,
+        createdAt: '2026-02-12T11:00:00.000Z',
+      },
+    ],
+    createdAt: '2026-02-11T10:00:00.000Z',
+    updatedAt: '2026-02-12T11:00:00.000Z',
+  },
+
+  // ── demande-005 : pret_acceptation_patient (Alice, emailNotifEnvoyee=true → test redirection)
+  {
+    id: 'demande-005',
+    patientId: 'patient-alice',
+    patientPrenom: 'Alice',
+    nom: 'Alice — Alger',
+    urgente: true,
+    medicaments: [{ nom: 'Oméprazole 20mg', quantite: 2 }],
+    adresseLivraison: '5 rue des Lilas, Alger, Algérie',
+    statut: 'pret_acceptation_patient',
+    ordonanceId: 'ordonance-005',
+    cagnotteId: 'cagnotte-005',
+    propositions: [
+      {
+        id: 'prop-004',
+        demandeId: 'demande-005',
+        aidantId: 'aidant-ben',
+        aidantPrenom: 'Benjamin',
+        type: 'prop3_achat_transport',
+        montantContribue: 120,
+        createdAt: '2026-02-15T14:00:00.000Z',
+      },
+    ],
+    transporteurId: 'aidant-ben',
+    transporteurPrenom: 'Benjamin',
+    emailNotifEnvoyee: true,
+    createdAt: '2026-02-14T09:00:00.000Z',
+    updatedAt: '2026-02-15T14:00:00.000Z',
+  },
+
+  // ── demande-006 : livraison_confirmee (Alice, Benjamin transporteur, patient a confirmé)
+  {
+    id: 'demande-006',
+    patientId: 'patient-alice',
+    patientPrenom: 'Alice',
+    nom: 'Alice — Alger',
+    urgente: false,
+    medicaments: [{ nom: 'Lisinopril 10mg', quantite: 1 }],
+    adresseLivraison: '5 rue des Lilas, Alger, Algérie',
+    statut: 'livraison_confirmee',
+    ordonanceId: 'ordonance-006',
+    cagnotteId: 'cagnotte-006',
+    propositions: [
+      {
+        id: 'prop-005',
+        demandeId: 'demande-006',
+        aidantId: 'aidant-ben',
+        aidantPrenom: 'Benjamin',
+        type: 'prop3_achat_transport',
+        montantContribue: 80,
+        createdAt: '2026-02-18T10:00:00.000Z',
+      },
+    ],
+    transporteurId: 'aidant-ben',
+    transporteurPrenom: 'Benjamin',
+    emailNotifEnvoyee: true,
+    createdAt: '2026-02-17T08:00:00.000Z',
+    updatedAt: '2026-02-19T09:00:00.000Z',
+  },
+
+  // ── demande-007 : livree (Alice, Leila transporteur, ordonnance livrée)
+  {
+    id: 'demande-007',
+    patientId: 'patient-alice',
+    patientPrenom: 'Alice',
+    nom: 'Alice — Oran',
+    urgente: false,
+    medicaments: [
+      { nom: 'Paracétamol 500mg', quantite: 2 },
+      { nom: 'Ibuprofène 400mg', quantite: 1 },
+    ],
+    adresseLivraison: '12 boulevard Krim Belkacem, Oran, Algérie',
+    statut: 'livree',
+    ordonanceId: 'ordonance-007',
+    cagnotteId: 'cagnotte-007',
+    propositions: [
+      {
+        id: 'prop-006',
+        demandeId: 'demande-007',
+        aidantId: 'aidant-leila',
+        aidantPrenom: 'Leila',
+        type: 'prop3_achat_transport',
+        montantContribue: 60,
+        createdAt: '2026-02-20T10:00:00.000Z',
+      },
+    ],
+    transporteurId: 'aidant-leila',
+    transporteurPrenom: 'Leila',
+    emailNotifEnvoyee: true,
+    createdAt: '2026-02-19T11:00:00.000Z',
+    updatedAt: '2026-02-21T15:00:00.000Z',
+  },
+
+  // ── demande-008 : traitee (Alice, avec message de remerciement)
+  {
+    id: 'demande-008',
+    patientId: 'patient-alice',
+    patientPrenom: 'Alice',
+    nom: 'Alice — Alger',
+    urgente: false,
+    medicaments: [{ nom: 'Vitamine D3 1000UI', quantite: 3 }],
+    adresseLivraison: '5 rue des Lilas, Alger, Algérie',
+    statut: 'traitee',
+    ordonanceId: 'ordonance-008',
+    cagnotteId: 'cagnotte-008',
+    propositions: [
+      {
+        id: 'prop-007',
+        demandeId: 'demande-008',
+        aidantId: 'aidant-ben',
+        aidantPrenom: 'Benjamin',
+        type: 'prop3_achat_transport',
+        montantContribue: 100,
+        createdAt: '2026-02-22T10:00:00.000Z',
+      },
+    ],
+    transporteurId: 'aidant-ben',
+    transporteurPrenom: 'Benjamin',
+    emailNotifEnvoyee: true,
+    messageRemerciement: 'Merci infiniment à toute l\'équipe TransMed ! Vous avez changé ma vie.',
+    createdAt: '2026-02-21T09:00:00.000Z',
+    updatedAt: '2026-02-24T10:00:00.000Z',
+    deliveredAt: '2026-02-24T10:00:00.000Z',
   },
 ]

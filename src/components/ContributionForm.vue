@@ -1,7 +1,10 @@
 <template>
   <div class="contribution-form">
     <label class="field-label">Votre contribution (€)</label>
-    <div class="amount-input-wrap" :class="{ focused: isFocused }">
+    <div
+      class="amount-input-wrap"
+      :class="{ focused: isFocused }"
+    >
       <span class="euro-symbol">€</span>
       <input
         v-model.number="montant"
@@ -11,19 +14,53 @@
         min="1"
         @focus="isFocused = true"
         @blur="isFocused = false"
-      />
+      >
     </div>
-    <div v-if="erreur" class="erreur-msg">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <div
+      v-if="erreur"
+      class="erreur-msg"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M12 8v4M12 16h.01"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       {{ erreur }}
     </div>
-    <button class="contrib-btn" type="button" @click="soumettre">
+    <button
+      class="contrib-btn"
+      type="button"
+      @click="soumettre"
+    >
       Contribuer à la cagnotte
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M5 12h14M12 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M5 12h14M12 5l7 7-7 7"
+          stroke="white"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
     </button>
   </div>

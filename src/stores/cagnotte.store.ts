@@ -37,6 +37,7 @@ export const useCagnotteStore = defineStore('cagnotte', () => {
   ): Promise<{ objectifAtteint: boolean }> {
     const { cagnotte, objectifAtteint } = await cagnotteService.ajouterContribution(data)
     cagnottesParDemande.value.set(demandeId, cagnotte)
+
     return { objectifAtteint }
   }
 

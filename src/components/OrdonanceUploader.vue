@@ -1,82 +1,220 @@
 <template>
   <div class="ordonance-uploader">
+    <!-- Input file caché — déclenché directement pour garantir le user gesture sur web -->
+    <input
+      ref="fileInputRef"
+      type="file"
+      accept="image/jpeg,image/png,application/pdf"
+      style="display:none"
+      @change="onFileInputChange"
+    >
+
     <button
       class="upload-btn"
       :class="{ 'is-done': modelValue }"
       type="button"
-      @click="ouvrirActionSheet"
+      @click="onUploadClick"
     >
       <div class="upload-icon">
-        <svg v-if="!modelValue" width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          v-if="!modelValue"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
-        <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          v-else
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M20 6L9 17l-5-5"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </div>
       <div class="upload-text">
         <span class="upload-title">{{ modelValue ? 'Ordonnance jointe' : 'Joindre une ordonnance *' }}</span>
-        <span class="upload-sub">{{ modelValue ? 'Toucher pour changer' : 'Photo, galerie ou PDF' }}</span>
+        <span class="upload-sub">{{ modelValue ? 'Toucher pour changer' : 'Photo ou PDF' }}</span>
       </div>
     </button>
 
-    <div v-if="pickError" class="erreur-msg">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <div
+      v-if="pickError"
+      class="erreur-msg"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M12 8v4M12 16h.01"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       {{ pickError }}
     </div>
 
     <!-- Aperçu -->
-    <div v-if="modelValue" class="apercu" :class="{ 'apercu-animate': modelValue }">
+    <div
+      v-if="modelValue"
+      class="apercu"
+      :class="{ 'apercu-animate': modelValue }"
+    >
       <img
         v-if="modelValue.mimeType !== 'application/pdf'"
         :src="modelValue.base64Data"
         class="apercu-image"
         alt="Aperçu ordonnance"
-      />
-      <div v-else class="apercu-pdf">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      >
+      <div
+        v-else
+        class="apercu-pdf"
+      >
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M14 2v6h6M16 13H8M16 17H8M10 9H8"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
         </svg>
         <p>Ordonnance PDF jointe</p>
       </div>
     </div>
 
+    <!-- Action sheet natif uniquement -->
     <ion-action-sheet
+      v-if="isNative"
       :is-open="actionSheetOpen"
       header="Joindre une ordonnance"
       :buttons="actionSheetButtons"
-      @didDismiss="actionSheetOpen = false"
+      @did-dismiss="actionSheetOpen = false"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { IonActionSheet } from '@ionic/vue'
+import { Capacitor } from '@capacitor/core'
 import { cameraOutline, imagesOutline, documentOutline } from 'ionicons/icons'
-import { useOrdonance } from '../composables/useOrdonance'
-import type { Ordonance } from '../types/ordonance.types'
+import type { Ordonance, MimeTypeOrdonance } from '../types/ordonance.types'
 
 defineProps<{ modelValue: Ordonance | null }>()
 const emit = defineEmits<{ (e: 'update:modelValue', value: Ordonance | null): void }>()
 
-const { ordonance, pickError, pickFromCameraOrGallery, pickFromFiles } = useOrdonance()
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const pickError = ref<string | null>(null)
 const actionSheetOpen = ref(false)
+const isNative = Capacitor.isNativePlatform()
 
-watch(ordonance, (val) => { if (val) emit('update:modelValue', val) })
+function onUploadClick() {
+  pickError.value = null
+  if (isNative) {
+    // Sur natif : proposer caméra/galerie/fichier via action sheet
+    actionSheetOpen.value = true
+  } else {
+    // Sur web : déclencher directement le sélecteur de fichier (user gesture garanti)
+    fileInputRef.value?.click()
+  }
+}
+
+function onFileInputChange(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  // Reset input value pour permettre de re-sélectionner le même fichier
+  ;(event.target as HTMLInputElement).value = ''
+
+  if (file.size > 10 * 1024 * 1024) {
+    pickError.value = 'Fichier trop volumineux (max 10 Mo).'
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = () => {
+    emit('update:modelValue', {
+      id: '',
+      demandeId: '',
+      base64Data: reader.result as string,
+      mimeType: file.type as MimeTypeOrdonance,
+      createdAt: new Date().toISOString(),
+    })
+    pickError.value = null
+  }
+  reader.onerror = () => { pickError.value = 'Impossible de lire le fichier.' }
+  reader.readAsDataURL(file)
+}
+
+async function pickFromCameraOrGallery(source: 'CAMERA' | 'PHOTOS') {
+  try {
+    const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
+    const photo = await Camera.getPhoto({
+      quality: 80,
+      resultType: CameraResultType.DataUrl,
+      source: source === 'CAMERA' ? CameraSource.Camera : CameraSource.Photos,
+      allowEditing: false,
+    })
+    if (!photo.dataUrl) throw new Error('Aucune donnée retournée par la caméra.')
+    const mimeType: MimeTypeOrdonance = photo.format === 'png' ? 'image/png' : 'image/jpeg'
+    emit('update:modelValue', {
+      id: '',
+      demandeId: '',
+      base64Data: photo.dataUrl,
+      mimeType,
+      createdAt: new Date().toISOString(),
+    })
+    pickError.value = null
+  } catch {
+    pickError.value = 'Impossible de sélectionner la photo.'
+  }
+}
+
+function pickFromFilesNative() {
+  fileInputRef.value?.click()
+}
 
 const actionSheetButtons = [
   { text: 'Prendre une photo',       icon: cameraOutline,   handler: () => pickFromCameraOrGallery('CAMERA') },
   { text: 'Choisir dans la galerie', icon: imagesOutline,   handler: () => pickFromCameraOrGallery('PHOTOS') },
-  { text: 'Choisir un fichier PDF',  icon: documentOutline, handler: () => pickFromFiles() },
+  { text: 'Choisir un fichier PDF',  icon: documentOutline, handler: () => pickFromFilesNative() },
   { text: 'Annuler', role: 'cancel' },
 ]
-
-function ouvrirActionSheet() { actionSheetOpen.value = true }
 </script>
 
 <style scoped>

@@ -2,6 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
+        <!-- FR-107 ✓ — bouton retour haut gauche, style uniforme via App.vue ion-back-button -->
         <ion-buttons slot="start">
           <ion-back-button :default-href="`/app/demandes/${demandeId}`" />
         </ion-buttons>
@@ -15,26 +16,54 @@
     </ion-header>
 
     <ion-content :fullscreen="true">
-      <div ref="messagesContainer" class="messages-container">
+      <div
+        ref="messagesContainer"
+        class="messages-container"
+      >
         <!-- État vide -->
-        <div v-if="messages.length === 0 && !loading" class="empty-chat">
+        <div
+          v-if="messages.length === 0 && !loading"
+          class="empty-chat"
+        >
           <div class="empty-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#1B8C5A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                stroke="#1B8C5A"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </div>
-          <p class="empty-title">Aucun message</p>
-          <p class="empty-hint">Posez votre première question !</p>
+          <p class="empty-title">
+            Aucun message
+          </p>
+          <p class="empty-hint">
+            Posez votre première question !
+          </p>
         </div>
 
-        <MessageBubble v-for="message in messages" :key="message.id" :message="message" />
+        <MessageBubble
+          v-for="message in messages"
+          :key="message.id"
+          :message="message"
+        />
       </div>
     </ion-content>
 
     <!-- Footer input ── -->
     <ion-footer>
       <div class="chat-footer">
-        <div class="input-wrap" :class="{ focused: inputFocused }">
+        <div
+          class="input-wrap"
+          :class="{ focused: inputFocused }"
+        >
           <input
             v-model="contenu"
             type="text"
@@ -44,7 +73,7 @@
             @focus="inputFocused = true"
             @blur="inputFocused = false"
             @keyup.enter="envoyer"
-          />
+          >
         </div>
         <button
           class="send-btn"
@@ -53,8 +82,19 @@
           type="button"
           @click="envoyer"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
       </div>

@@ -1,21 +1,55 @@
 <template>
-  <div class="cagnotte-card" :class="{ 'is-atteinte': cagnotte.statut === 'atteinte' }">
+  <div
+    class="cagnotte-card"
+    :class="{ 'is-atteinte': cagnotte.statut === 'atteinte' }"
+  >
     <div class="cagnotte-header">
       <div class="cagnotte-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2C10.34 2 9 3.34 9 5H4v2h1l1 12h12l1-12h1V5h-5c0-1.66-1.34-3-3-3zm0 2c.55 0 1 .45 1 1H11c0-.55.45-1 1-1zm-5.8 3h11.6l-.83 10H7.03L6.2 7zm5.8 1c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3zm0 2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z" fill="currentColor"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M12 2C10.34 2 9 3.34 9 5H4v2h1l1 12h12l1-12h1V5h-5c0-1.66-1.34-3-3-3zm0 2c.55 0 1 .45 1 1H11c0-.55.45-1 1-1zm-5.8 3h11.6l-.83 10H7.03L6.2 7zm5.8 1c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3zm0 2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"
+            fill="currentColor"
+          />
         </svg>
       </div>
       <span class="cagnotte-title">Cagnotte</span>
-      <span v-if="cagnotte.statut === 'atteinte'" class="atteinte-badge">
+      <span
+        v-if="cagnotte.statut === 'atteinte'"
+        class="atteinte-badge"
+      >
         🎉 Objectif atteint !
       </span>
     </div>
 
-    <div v-if="cagnotte.statut === 'en_attente_evaluation'" class="en-attente">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="attente-icon">
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <div
+      v-if="cagnotte.statut === 'en_attente_evaluation'"
+      class="en-attente"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        class="attente-icon"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M12 6v6l4 2"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       <p>En attente d'évaluation par l'acheteur</p>
     </div>
@@ -42,7 +76,10 @@
 
       <div class="contributions-row">
         <span class="contrib-count">{{ cagnotte.contributions.length }} contribution(s)</span>
-        <span v-if="cagnotte.statut === 'atteinte'" class="stars">★ ★ ★</span>
+        <span
+          v-if="cagnotte.statut === 'atteinte'"
+          class="stars"
+        >★ ★ ★</span>
       </div>
     </div>
   </div>

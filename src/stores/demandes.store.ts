@@ -8,8 +8,6 @@ import { applyTransition, canTransition } from '../services/demandeStateMachine'
 
 const STATUTS_ACTIFS_AIDANT: StatutDemande[] = [
   'attente_fonds_et_transporteur',
-  'attente_fonds',
-  'attente_transporteur',
   'fonds_atteints',
   'transporteur_disponible',
 ]
@@ -71,8 +69,38 @@ export const useDemandeStore = defineStore('demandes', () => {
     if (index !== -1) demandes.value[index] = updated
   }
 
+  async function confirmerLivraison(demandeId: string): Promise<void> {
+    const updated = await demandeService.confirmerParPatient(demandeId)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function livrerOrdonnance(demandeId: string): Promise<void> {
+    const updated = await demandeService.marquerLivree(demandeId)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function recevoirMedicaments(demandeId: string, messageRemerciement?: string): Promise<void> {
+    const updated = await demandeService.marquerTraitee(demandeId, messageRemerciement)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
   async function marquerLivree(demandeId: string): Promise<void> {
     const updated = await demandeService.marquerLivree(demandeId)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function setTransporteur(demandeId: string, aidantId: string, aidantPrenom: string): Promise<void> {
+    const updated = await demandeService.updateTransporteur(demandeId, aidantId, aidantPrenom)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function markEmailNotifSent(demandeId: string): Promise<void> {
+    const updated = await demandeService.markEmailNotifSent(demandeId)
     const index = demandes.value.findIndex((d) => d.id === demandeId)
     if (index !== -1) demandes.value[index] = updated
   }
@@ -90,7 +118,12 @@ export const useDemandeStore = defineStore('demandes', () => {
     fetchForPatient,
     createDemande,
     triggerTransition,
+    setTransporteur,
+    markEmailNotifSent,
     confirmerParPatient,
+    confirmerLivraison,
+    livrerOrdonnance,
+    recevoirMedicaments,
     marquerLivree,
     getById,
     canTransition,

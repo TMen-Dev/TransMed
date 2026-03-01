@@ -6,6 +6,7 @@ import type { Proposition, CreatePropositionDto } from '../types/proposition.typ
 import { propositionService } from '../services/index'
 import { useDemandeStore } from './demandes.store'
 import { useCagnotteStore } from './cagnotte.store'
+import { useNotification } from '../composables/useNotification'
 
 export const usePropositionsStore = defineStore('propositions', () => {
   const propositionsParDemande = ref<Map<string, Proposition[]>>(new Map())
@@ -33,9 +34,15 @@ export const usePropositionsStore = defineStore('propositions', () => {
 
     const proposition = await propositionService.create(data)
 
-    // Mettre à jour la liste locale des propositions
+    // Mettre à jour la liste locale des propositions (store propositions)
     const existing = propositionsParDemande.value.get(data.demandeId) ?? []
     propositionsParDemande.value.set(data.demandeId, [...existing, proposition])
+
+    // H3 — Synchroniser aussi dans demandes[i].propositions pour peutVoirOrdonnance, etc.
+    const demandeIndex = demandeStore.demandes.findIndex((d) => d.id === data.demandeId)
+    if (demandeIndex !== -1) {
+      demandeStore.demandes[demandeIndex].propositions.push(proposition)
+    }
 
     // Déclencher la transition de statut
     if (data.type === 'prop1_cagnotte' && data.montantContribue) {
@@ -53,11 +60,33 @@ export const usePropositionsStore = defineStore('propositions', () => {
         )
         const evenement = objectifAtteint ? 'prop1_cagnotte_atteinte' : 'prop1_contribution'
         await demandeStore.triggerTransition(data.demandeId, evenement)
+        // FR-118 — Notif email APRÈS la transition (prop1_cagnotte_atteinte peut → pret si transporteur déjà là)
+        const demandeApres1 = demandeStore.getById(data.demandeId)
+        if (demandeApres1) {
+          const { checkAndSendEmailNotif } = useNotification()
+          await checkAndSendEmailNotif(demandeApres1)
+        }
       }
     } else if (data.type === 'prop2_transport') {
       await demandeStore.triggerTransition(data.demandeId, 'prop2_transport')
+      // C1/C2 — Assigner le transporteur
+      await demandeStore.setTransporteur(data.demandeId, data.aidantId, data.aidantPrenom)
+      // FR-118 — Vérifier si notification email doit être déclenchée
+      const demandeApresProp2 = demandeStore.getById(data.demandeId)
+      if (demandeApresProp2) {
+        const { checkAndSendEmailNotif } = useNotification()
+        await checkAndSendEmailNotif(demandeApresProp2)
+      }
     } else if (data.type === 'prop3_achat_transport') {
       await demandeStore.triggerTransition(data.demandeId, 'prop3_achat_transport')
+      // C1/C2 — Assigner le transporteur (acheteur = transporteur pour Prop3)
+      await demandeStore.setTransporteur(data.demandeId, data.aidantId, data.aidantPrenom)
+      // FR-118 — Vérifier si notification email doit être déclenchée
+      const demandeApresProp3 = demandeStore.getById(data.demandeId)
+      if (demandeApresProp3) {
+        const { checkAndSendEmailNotif } = useNotification()
+        await checkAndSendEmailNotif(demandeApresProp3)
+      }
     }
 
     return proposition

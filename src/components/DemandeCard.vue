@@ -1,5 +1,20 @@
 <template>
-  <div class="demande-card" :class="`accent-${accentClass}`" @click="$emit('click')">
+  <div
+    class="demande-card"
+    :class="`accent-${accentClass}`"
+    @click="$emit('click')"
+  >
+    <div class="card-header">
+      <span class="demande-nom">{{ demande.nom }}</span>
+      <div class="header-badges">
+        <span
+          v-if="demande.urgente"
+          class="urgent-badge"
+        >URGENT</span>
+        <StatutBadge :statut="demande.statut" />
+      </div>
+    </div>
+
     <div class="card-top">
       <div class="medicaments-preview">
         <span
@@ -9,17 +24,28 @@
         >
           {{ med.nom }} <span class="med-qty">×{{ med.quantite }}</span>
         </span>
-        <span v-if="demande.medicaments.length > 2" class="med-chip med-more">
+        <span
+          v-if="demande.medicaments.length > 2"
+          class="med-chip med-more"
+        >
           +{{ demande.medicaments.length - 2 }}
         </span>
       </div>
-      <StatutBadge :statut="demande.statut" />
     </div>
 
     <div class="card-bottom">
       <span class="adresse-wrap">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" class="pin-icon">
-          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="currentColor"/>
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          class="pin-icon"
+        >
+          <path
+            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"
+            fill="currentColor"
+          />
         </svg>
         <span class="adresse">{{ demande.adresseLivraison }}</span>
       </span>
@@ -38,12 +64,11 @@ defineEmits<{ (e: 'click'): void }>()
 
 const ACCENT_MAP: Record<string, string> = {
   attente_fonds_et_transporteur: 'gray',
-  attente_fonds: 'amber',
-  attente_transporteur: 'blue',
   fonds_atteints: 'gold',
   transporteur_disponible: 'blue',
   pret_acceptation_patient: 'green',
-  en_cours_livraison: 'terra',
+  livraison_confirmee: 'terra',
+  livree: 'green',
   traitee: 'green',
 }
 
@@ -90,9 +115,43 @@ function formatDate(iso: string): string {
 .accent-gray   { border-left-color: #9E8E85; }
 
 /* ── Layout ── */
-.card-top {
+.card-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.demande-nom {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1A1510;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.urgent-badge {
+  background: #C0392B;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 100px;
+}
+
+.card-top {
+  display: flex;
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 10px;

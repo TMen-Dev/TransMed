@@ -33,14 +33,34 @@ export interface IDemandeService {
   updateStatut(id: string, newStatut: StatutDemande): Promise<Demande>
 
   /**
-   * Le patient confirme la demande : statut 6 → 7 (en_cours_livraison).
+   * Le patient confirme la livraison : pret_acceptation_patient → livraison_confirmee (FR-213).
    * @throws si statut !== 'pret_acceptation_patient'
    */
   confirmerParPatient(id: string): Promise<Demande>
 
   /**
-   * L'aidant (Prop3) marque la livraison effectuée : statut 7 → 8 (traitee).
-   * @throws si statut !== 'en_cours_livraison'
+   * Assigne le transporteur à une demande (après Prop2 ou Prop3).
+   * Met à jour transporteurId et transporteurPrenom.
+   * @throws si la demande est introuvable
+   */
+  updateTransporteur(id: string, aidantId: string, aidantPrenom: string): Promise<Demande>
+
+  /**
+   * Le transporteur marque la livraison effectuée : livraison_confirmee → livree (FR-214).
+   * @throws si statut !== 'livraison_confirmee'
    */
   marquerLivree(id: string): Promise<Demande>
+
+  /**
+   * Le patient confirme la réception des médicaments : livree → traitee (FR-215).
+   * Stocke le message de remerciement optionnel (FR-224).
+   * @throws si statut !== 'livree'
+   */
+  marquerTraitee(id: string, messageRemerciement?: string): Promise<Demande>
+
+  /**
+   * Marque la notification email comme envoyée pour éviter les doublons.
+   * FR-120 — set emailNotifEnvoyee = true
+   */
+  markEmailNotifSent(id: string): Promise<Demande>
 }

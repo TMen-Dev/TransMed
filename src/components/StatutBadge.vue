@@ -1,5 +1,8 @@
 <template>
-  <span class="statut-badge" :class="`statut-${statut}`">
+  <span
+    class="statut-badge"
+    :class="`statut-${statut}`"
+  >
     <span class="badge-dot" />
     {{ libelle }}
   </span>
@@ -13,12 +16,11 @@ const props = defineProps<{ statut: StatutDemande }>()
 
 const LIBELLES: Record<StatutDemande, string> = {
   attente_fonds_et_transporteur: 'En attente',
-  attente_fonds: 'Attend les fonds',
-  attente_transporteur: 'Attend transporteur',
   fonds_atteints: 'Fonds atteints',
   transporteur_disponible: 'Transporteur prêt',
   pret_acceptation_patient: 'À confirmer',
-  en_cours_livraison: 'En livraison',
+  livraison_confirmee: 'Confirmée',
+  livree: 'Livrée',
   traitee: 'Traitée ✓',
 }
 
@@ -52,18 +54,6 @@ const libelle = computed(() => LIBELLES[props.statut])
 }
 .statut-attente_fonds_et_transporteur .badge-dot { background: #9E8E85; }
 
-.statut-attente_fonds {
-  background: #FEF9EC;
-  color: #96610A;
-}
-.statut-attente_fonds .badge-dot { background: #D68910; }
-
-.statut-attente_transporteur {
-  background: #EAF3FB;
-  color: #1A5C96;
-}
-.statut-attente_transporteur .badge-dot { background: #2B7CC1; }
-
 .statut-fonds_atteints {
   background: #FEF9EC;
   color: #956208;
@@ -88,11 +78,23 @@ const libelle = computed(() => LIBELLES[props.statut])
   animation: dotPulse 1.2s ease-in-out infinite;
 }
 
-.statut-en_cours_livraison {
+.statut-livraison_confirmee {
   background: #FDF0E8;
   color: #A94517;
 }
-.statut-en_cours_livraison .badge-dot { background: #C8521A; }
+.statut-livraison_confirmee .badge-dot {
+  background: #C8521A;
+  animation: dotPulse 1.3s ease-in-out infinite;
+}
+
+.statut-livree {
+  background: #FEF9EC;
+  color: #956208;
+}
+.statut-livree .badge-dot {
+  background: #C9820A;
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
 
 .statut-traitee {
   background: #E8F7F0;

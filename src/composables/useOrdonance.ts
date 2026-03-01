@@ -37,7 +37,7 @@ export function useOrdonance() {
       const mimeType: MimeTypeOrdonance =
         photo.format === 'png' ? 'image/png' : 'image/jpeg'
       _buildOrdonance(photo.dataUrl, mimeType)
-    } catch (e) {
+    } catch (_e) {
       pickError.value = 'Impossible de sélectionner la photo. Essayez un fichier PDF.'
     }
   }
