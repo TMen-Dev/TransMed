@@ -171,6 +171,7 @@ function onFileInputChange(event: Event) {
     emit('update:modelValue', {
       id: '',
       demandeId: '',
+      storagePath: '',
       base64Data: reader.result as string,
       mimeType: file.type as MimeTypeOrdonance,
       createdAt: new Date().toISOString(),
@@ -195,6 +196,7 @@ async function pickFromCameraOrGallery(source: 'CAMERA' | 'PHOTOS') {
     emit('update:modelValue', {
       id: '',
       demandeId: '',
+      storagePath: '',
       base64Data: photo.dataUrl,
       mimeType,
       createdAt: new Date().toISOString(),

@@ -11,7 +11,8 @@ export function useOrdonance() {
     ordonance.value = {
       id: '', // sera défini lors de l'upload via ordonanceService
       demandeId: '',
-      base64Data,
+      storagePath: '',       // sera défini après upload
+      base64Data,            // prévisualisation locale avant upload
       mimeType,
       createdAt: new Date().toISOString(),
     }

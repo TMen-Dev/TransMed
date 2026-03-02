@@ -1,0 +1,243 @@
+import type { IDemandeService } from '../interfaces/IDemandeService'
+import type { Demande, CreateDemandeDto, StatutDemande } from '../../types/demande.types'
+import type { Medicament } from '../../types/medicament.types'
+import type { Proposition } from '../../types/proposition.types'
+import { supabase } from '../../lib/supabase'
+
+type DemandeRow = {
+  id: string
+  patient_id: string
+  patient_prenom: string
+  nom: string
+  urgente: boolean
+  adresse_livraison: string
+  statut: string
+  transporteur_id: string | null
+  transporteur_prenom: string | null
+  email_notif_envoyee: boolean
+  message_remerciement: string | null
+  delivered_at: string | null
+  created_at: string
+  updated_at: string
+  medicaments?: { id: string; nom: string; quantite: number; created_at: string }[]
+  propositions?: {
+    id: string
+    aidant_id: string
+    aidant_prenom: string
+    type: string
+    montant_contribue: number | null
+    created_at: string
+  }[]
+  cagnottes?: { id: string }[]
+  ordonnances?: { id: string }[]
+}
+
+export function mapRowToDemande(row: DemandeRow): Demande {
+  const medicaments: Medicament[] = (row.medicaments ?? []).map((m) => ({
+    id: m.id,
+    nom: m.nom,
+    quantite: m.quantite,
+    createdAt: m.created_at,
+  }))
+
+  const propositions: Proposition[] = (row.propositions ?? []).map((p) => ({
+    id: p.id,
+    demandeId: row.id,
+    aidantId: p.aidant_id,
+    aidantPrenom: p.aidant_prenom,
+    type: p.type as 'prop1_cagnotte' | 'prop2_transport' | 'prop3_achat_transport',
+    montantContribue: p.montant_contribue ?? undefined,
+    createdAt: p.created_at,
+  }))
+
+  return {
+    id: row.id,
+    patientId: row.patient_id,
+    patientPrenom: row.patient_prenom,
+    nom: row.nom,
+    urgente: row.urgente,
+    medicaments,
+    adresseLivraison: row.adresse_livraison,
+    statut: row.statut as StatutDemande,
+    ordonanceId: row.ordonnances?.[0]?.id ?? '',
+    cagnotteId: row.cagnottes?.[0]?.id ?? '',
+    propositions,
+    transporteurId: row.transporteur_id ?? undefined,
+    transporteurPrenom: row.transporteur_prenom ?? undefined,
+    emailNotifEnvoyee: row.email_notif_envoyee,
+    messageRemerciement: row.message_remerciement ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    deliveredAt: row.delivered_at ?? undefined,
+  }
+}
+
+const SELECT_FULL = `
+  *,
+  medicaments(*),
+  propositions(*),
+  cagnottes(id),
+  ordonnances(id)
+`
+
+export class SupabaseDemandeService implements IDemandeService {
+  async getAll(): Promise<Demande[]> {
+    const { data, error } = await supabase
+      .from('demandes')
+      .select(SELECT_FULL)
+      .order('created_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r) => mapRowToDemande(r as unknown as DemandeRow))
+  }
+
+  async getById(id: string): Promise<Demande> {
+    const { data, error } = await supabase
+      .from('demandes')
+      .select(SELECT_FULL)
+      .eq('id', id)
+      .single()
+
+    if (error || !data) throw new Error(`Demande introuvable : ${id}`)
+    return mapRowToDemande(data as unknown as DemandeRow)
+  }
+
+  async getByPatientId(patientId: string): Promise<Demande[]> {
+    const { data, error } = await supabase
+      .from('demandes')
+      .select(SELECT_FULL)
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r) => mapRowToDemande(r as unknown as DemandeRow))
+  }
+
+  async getActiveForAidant(): Promise<Demande[]> {
+    const { data, error } = await supabase
+      .from('demandes')
+      .select(SELECT_FULL)
+      .in('statut', ['attente_fonds_et_transporteur', 'fonds_atteints', 'transporteur_disponible'])
+      .order('created_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r) => mapRowToDemande(r as unknown as DemandeRow))
+  }
+
+  async create(dto: CreateDemandeDto): Promise<Demande> {
+    // 1. Créer la demande
+    const { data: demande, error: demandeErr } = await supabase
+      .from('demandes')
+      .insert({
+        patient_id: dto.patientId,
+        patient_prenom: dto.patientPrenom,
+        nom: dto.nom,
+        urgente: dto.urgente,
+        adresse_livraison: dto.adresseLivraison,
+      })
+      .select()
+      .single()
+
+    if (demandeErr || !demande) throw new Error(demandeErr?.message ?? 'Erreur création demande')
+
+    // 2. Créer les médicaments
+    if (dto.medicaments.length > 0) {
+      const { error: medErr } = await supabase.from('medicaments').insert(
+        dto.medicaments.map((m) => ({
+          demande_id: demande.id,
+          nom: m.nom,
+          quantite: m.quantite,
+        }))
+      )
+      if (medErr) throw new Error(`Erreur médicaments : ${medErr.message}`)
+    }
+
+    // 3. Créer la cagnotte
+    const { error: cagErr } = await supabase.from('cagnottes').insert({
+      demande_id: demande.id,
+    })
+    if (cagErr) throw new Error(`Erreur cagnotte : ${cagErr.message}`)
+
+    // 4. Upload ordonnance si fournie
+    if (dto.ordonanceBase64 && dto.ordonanceMimeType) {
+      const ext = dto.ordonanceMimeType === 'application/pdf' ? 'pdf'
+        : dto.ordonanceMimeType === 'image/png' ? 'png' : 'jpg'
+      const path = `${demande.id}/ordonnance.${ext}`
+      // Extraire le base64 brut (supprimer le préfixe data URL s'il est présent)
+      const rawBase64 = dto.ordonanceBase64.replace(/^data:[^;]+;base64,/, '')
+      const byteChars = atob(rawBase64)
+      const byteArr = new Uint8Array(byteChars.length)
+      for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i)
+      const blob = new Blob([byteArr], { type: dto.ordonanceMimeType })
+
+      const { error: uploadErr } = await supabase.storage
+        .from('ordonnances')
+        .upload(path, blob, { contentType: dto.ordonanceMimeType })
+
+      if (!uploadErr) {
+        await supabase.from('ordonnances').insert({
+          demande_id: demande.id,
+          storage_path: path,
+          mime_type: dto.ordonanceMimeType,
+        })
+      }
+    }
+
+    return this.getById(demande.id)
+  }
+
+  async updateStatut(id: string, newStatut: StatutDemande): Promise<Demande> {
+    const current = await this.getById(id)
+    const { data, error } = await supabase
+      .rpc('update_demande_statut', {
+        p_demande_id: id,
+        p_expected_statut: current.statut,
+        p_new_statut: newStatut,
+      })
+
+    if (error) throw new Error(error.message)
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      throw new Error('STATUT_MISMATCH')
+    }
+    return this.getById(id)
+  }
+
+  async confirmerParPatient(id: string): Promise<Demande> {
+    return this.updateStatut(id, 'livraison_confirmee')
+  }
+
+  async updateTransporteur(id: string, aidantId: string, aidantPrenom: string): Promise<Demande> {
+    const { error } = await supabase
+      .from('demandes')
+      .update({ transporteur_id: aidantId, transporteur_prenom: aidantPrenom })
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    return this.getById(id)
+  }
+
+  async marquerLivree(id: string): Promise<Demande> {
+    return this.updateStatut(id, 'livree')
+  }
+
+  async marquerTraitee(id: string, messageRemerciement?: string): Promise<Demande> {
+    if (messageRemerciement) {
+      await supabase
+        .from('demandes')
+        .update({ message_remerciement: messageRemerciement, delivered_at: new Date().toISOString() })
+        .eq('id', id)
+    }
+    return this.updateStatut(id, 'traitee')
+  }
+
+  async markEmailNotifSent(id: string): Promise<Demande> {
+    const { error } = await supabase
+      .from('demandes')
+      .update({ email_notif_envoyee: true })
+      .eq('id', id)
+      .eq('email_notif_envoyee', false)
+
+    if (error) throw new Error(error.message)
+    return this.getById(id)
+  }
+}

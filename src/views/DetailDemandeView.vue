@@ -91,6 +91,29 @@
             :cagnotte="cagnotte"
             class="timeline-wrap"
           />
+
+          <!-- Badge "Patient notifié" — visible quand la notification a été envoyée -->
+          <div
+            v-if="notifTriggered && isAidant"
+            class="notif-success-badge"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Patient notifié par email
+          </div>
+
+          <!-- Avertissement échec définitif (3 tentatives échouées) -->
+          <div
+            v-if="notifEchec && isAidant"
+            class="notif-echec-banner"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            Notification échouée — contactez le patient directement
+          </div>
         </div>
 
         <!-- ── Médicaments ── -->
@@ -503,7 +526,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton,
@@ -518,6 +541,7 @@ import PropositionPanel from '../components/PropositionPanel.vue'
 import { useDemandeStore } from '../stores/demandes.store'
 import { useCagnotteStore } from '../stores/cagnotte.store'
 import { useCurrentUser } from '../composables/useCurrentUser'
+import { useDemandeRealtime } from '../composables/useDemandeRealtime'
 import { ordonanceService } from '../services/index'
 import type { Ordonance } from '../types/ordonance.types'
 import type { TypeProposition } from '../types/proposition.types'
@@ -546,7 +570,7 @@ async function showToast(message: string, color = 'success', duration = 4000) {
   await toast.present()
 }
 
-const { notifTriggered, notifMessage, resetNotif } = useNotification()
+const { notifTriggered, notifMessage, notifEchec, startListening, stopListening, resetNotif } = useNotification()
 
 const demande = computed(() => demandeStore.getById(route.params.id as string))
 const cagnotte = computed(() => demande.value ? (cagnotteStore.getForDemande(demande.value.id) ?? null) : null)
@@ -577,7 +601,11 @@ onMounted(async () => {
   const id = route.params.id as string
   if (!demandeStore.getById(id)) await demandeStore.fetchAll()
   if (demande.value) await cagnotteStore.fetchForDemande(demande.value.id)
+  useDemandeRealtime(id)
+  startListening(id)
 })
+
+onUnmounted(() => { stopListening() })
 
 // Observer le flag de notification pour afficher le toast dans cette vue (FR-119)
 watch(notifTriggered, async (triggered) => {
@@ -606,6 +634,7 @@ async function voirOrdonnance() {
     const modal = await modalController.create({
       component: OrdonanceModal,
       componentProps: {
+        signedUrl: ordonanceData.value.signedUrl,
         base64Data: ordonanceData.value.base64Data,
         mimeType: ordonanceData.value.mimeType,
       },
@@ -872,4 +901,34 @@ async function recevoirMedicaments() {
 
 .not-found { color: #7A6E65; }
 .center-content { display: flex; justify-content: center; align-items: center; height: 50vh; }
+
+/* ── Notification badges (006-patient-notifications) ── */
+.notif-success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #E8F7F0;
+  border: 1px solid #B2DFC8;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #146B45;
+  animation: tmPop 0.3s ease both;
+}
+
+.notif-echec-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #FDF0E8;
+  border: 1px solid #E8C4A8;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: #C8521A;
+}
 </style>

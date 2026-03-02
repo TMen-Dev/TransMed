@@ -49,6 +49,6 @@ export interface CreateDemandeDto {
   urgente: boolean // demande urgente (FR-206)
   medicaments: Medicament[]
   adresseLivraison: string
-  ordonanceBase64: string // fichier encodé en base64 (MVP local)
-  ordonanceMimeType: 'image/jpeg' | 'image/png' | 'application/pdf'
+  ordonanceBase64?: string // fichier encodé en base64 (optionnel — upload au moment de la création)
+  ordonanceMimeType?: 'image/jpeg' | 'image/png' | 'application/pdf'
 }

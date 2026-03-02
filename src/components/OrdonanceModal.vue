@@ -14,13 +14,13 @@
       <div class="ordonance-container">
         <img
           v-if="mimeType !== 'application/pdf'"
-          :src="base64Data"
+          :src="signedUrl || base64Data"
           class="ordonance-img"
           alt="Ordonnance"
         >
         <iframe
           v-else
-          :src="base64Data"
+          :src="signedUrl || base64Data"
           class="ordonance-pdf"
           title="Ordonnance PDF"
         />
@@ -33,7 +33,8 @@
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, modalController } from '@ionic/vue'
 
 defineProps<{
-  base64Data: string
+  signedUrl?: string   // Supabase Storage signed URL (préféré)
+  base64Data?: string  // Compatibilité transitoire : prévisualisation locale
   mimeType: string
 }>()
 </script>

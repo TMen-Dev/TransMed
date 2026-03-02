@@ -5,7 +5,15 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { IonApp, IonRouterOutlet } from '@ionic/vue'
+import { useAuthStore } from './stores/auth.store'
+
+const authStore = useAuthStore()
+
+onMounted(async () => {
+  await authStore.initSession()
+})
 </script>
 
 <style>

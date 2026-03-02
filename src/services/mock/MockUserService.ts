@@ -23,6 +23,7 @@ export class MockUserService implements IUserService {
       id: `user-${crypto.randomUUID()}`,
       prenom: data.prenom.trim(),
       role: data.role,
+      email: data.email ?? '',
       adresseDefaut: data.adresseDefaut,
       createdAt: new Date().toISOString(),
     }

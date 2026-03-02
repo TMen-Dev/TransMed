@@ -226,6 +226,100 @@
           </div>
 
           <div class="card-body">
+            <!-- Email inscription -->
+            <div class="field-group">
+              <label
+                class="field-label"
+                for="reg-email-input"
+              >Email</label>
+              <div
+                class="input-wrapper"
+                :class="{ 'input-focused': regEmailFocused }"
+              >
+                <svg
+                  class="input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path
+                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M22 6l-10 7L2 6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <input
+                  id="reg-email-input"
+                  v-model="regEmail"
+                  type="email"
+                  class="text-input"
+                  placeholder="alice@transmed.fr"
+                  autocomplete="email"
+                  @focus="regEmailFocused = true"
+                  @blur="regEmailFocused = false"
+                >
+              </div>
+            </div>
+
+            <!-- Mot de passe inscription -->
+            <div class="field-group">
+              <label
+                class="field-label"
+                for="reg-password-input"
+              >Mot de passe</label>
+              <div
+                class="input-wrapper"
+                :class="{ 'input-focused': regPasswordFocused }"
+              >
+                <svg
+                  class="input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <rect
+                    x="3"
+                    y="11"
+                    width="18"
+                    height="11"
+                    rx="2"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M7 11V7a5 5 0 0110 0v4"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <input
+                  id="reg-password-input"
+                  v-model="regPassword"
+                  type="password"
+                  class="text-input"
+                  placeholder="Min. 6 caractères"
+                  autocomplete="new-password"
+                  @focus="regPasswordFocused = true"
+                  @blur="regPasswordFocused = false"
+                >
+              </div>
+            </div>
+
             <!-- Champ prénom -->
             <div class="field-group">
               <label
@@ -415,12 +509,12 @@
             <!-- Bouton créer -->
             <button
               class="submit-btn"
-              :class="{ 'submit-disabled': !formValide }"
-              :disabled="!formValide"
+              :class="{ 'submit-disabled': !formValide || registerLoading }"
+              :disabled="!formValide || registerLoading"
               type="button"
               @click="valider"
             >
-              <span>Commencer</span>
+              <span>{{ registerLoading ? 'Création…' : 'Commencer' }}</span>
               <svg
                 width="18"
                 height="18"
@@ -457,7 +551,6 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { IonPage, IonContent } from '@ionic/vue'
 import { useAuthStore } from '../stores/auth.store'
-import { userService } from '../services/index'
 import type { RoleUtilisateur } from '../types/user.types'
 
 const router = useRouter()
@@ -476,13 +569,24 @@ const loginLoading = ref(false)
 const passwordInputRef = ref<HTMLInputElement | null>(null)
 
 // Register state
+const regEmail = ref('')
+const regPassword = ref('')
+const regEmailFocused = ref(false)
+const regPasswordFocused = ref(false)
 const prenom = ref('')
 const role = ref<RoleUtilisateur | ''>('')
 const erreur = ref('')
 const inputFocused = ref(false)
+const registerLoading = ref(false)
 
 const loginValide = computed(() => email.value.trim().length > 0 && password.value.length > 0)
-const formValide = computed(() => prenom.value.trim().length > 0 && role.value !== '')
+const formValide = computed(
+  () =>
+    regEmail.value.trim().length > 0 &&
+    regPassword.value.length >= 6 &&
+    prenom.value.trim().length > 0 &&
+    role.value !== ''
+)
 
 function focusPassword() {
   passwordInputRef.value?.focus()
@@ -493,8 +597,7 @@ async function seConnecter() {
   erreurLogin.value = ''
   loginLoading.value = true
   try {
-    const utilisateur = await userService.authenticate(email.value.trim(), password.value)
-    authStore.setUser(utilisateur)
+    await authStore.login(email.value.trim(), password.value)
     await router.replace('/app/demandes')
   } catch (e) {
     erreurLogin.value = e instanceof Error ? e.message : 'Erreur de connexion.'
@@ -508,6 +611,14 @@ function selectRole(r: RoleUtilisateur) {
 }
 
 async function valider() {
+  if (!regEmail.value.trim()) {
+    erreur.value = 'Veuillez saisir votre adresse email.'
+    return
+  }
+  if (regPassword.value.length < 6) {
+    erreur.value = 'Le mot de passe doit contenir au moins 6 caractères.'
+    return
+  }
   if (!prenom.value.trim()) {
     erreur.value = 'Veuillez saisir votre prénom.'
     return
@@ -517,12 +628,20 @@ async function valider() {
     return
   }
   erreur.value = ''
-  const utilisateur = await userService.create({
-    prenom: prenom.value.trim(),
-    role: role.value as RoleUtilisateur,
-  })
-  authStore.setUser(utilisateur)
-  await router.replace('/app/demandes')
+  registerLoading.value = true
+  try {
+    await authStore.register(
+      prenom.value.trim(),
+      role.value as RoleUtilisateur,
+      regEmail.value.trim(),
+      regPassword.value
+    )
+    await router.replace('/app/demandes')
+  } catch (e) {
+    erreur.value = e instanceof Error ? e.message : "Erreur lors de la création du compte."
+  } finally {
+    registerLoading.value = false
+  }
 }
 </script>
 

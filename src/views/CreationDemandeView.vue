@@ -385,7 +385,7 @@ async function soumettre() {
       urgente: urgente.value,
       medicaments: medsValides,
       adresseLivraison: adresse.value.trim(),
-      ordonanceBase64: ordonance.value.base64Data,
+      ordonanceBase64: ordonance.value.base64Data ?? ordonance.value.signedUrl,
       ordonanceMimeType: ordonance.value.mimeType,
     })
     await modalController.dismiss(null, 'created')

@@ -47,8 +47,8 @@ export class MockDemandeService implements IDemandeService {
     // Upload ordonnance
     const ordonance = await ordonanceService.upload(
       `demande-${crypto.randomUUID()}`, // ID temporaire pour l'upload
-      data.ordonanceBase64,
-      data.ordonanceMimeType
+      data.ordonanceBase64!,
+      data.ordonanceMimeType!
     )
 
     // Créer la cagnotte associée

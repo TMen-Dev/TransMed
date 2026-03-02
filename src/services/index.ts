@@ -1,16 +1,16 @@
 // src/services/index.ts
-// Point d'injection unique — remplacer UNIQUEMENT ces imports pour migrer vers Supabase.
+// Point d'injection unique — swap Mock → Supabase (005-supabase-backend)
 
-import { MockUserService } from './mock/MockUserService'
-import { MockOrdonanceService } from './mock/MockOrdonanceService'
-import { MockCagnotteService } from './mock/MockCagnotteService'
-import { MockDemandeService } from './mock/MockDemandeService'
-import { MockPropositionService } from './mock/MockPropositionService'
-import { MockMessageService } from './mock/MockMessageService'
+import { SupabaseUserService } from './supabase/SupabaseUserService'
+import { SupabaseOrdonanceService } from './supabase/SupabaseOrdonanceService'
+import { SupabaseCagnotteService } from './supabase/SupabaseCagnotteService'
+import { SupabaseDemandeService } from './supabase/SupabaseDemandeService'
+import { SupabasePropositionService } from './supabase/SupabasePropositionService'
+import { SupabaseMessageService } from './supabase/SupabaseMessageService'
 
-export const userService = new MockUserService()
-export const ordonanceService = new MockOrdonanceService()
-export const cagnotteService = new MockCagnotteService()
-export const demandeService = new MockDemandeService()
-export const propositionService = new MockPropositionService()
-export const messageService = new MockMessageService()
+export const userService = new SupabaseUserService()
+export const ordonanceService = new SupabaseOrdonanceService()
+export const cagnotteService = new SupabaseCagnotteService()
+export const demandeService = new SupabaseDemandeService()
+export const propositionService = new SupabasePropositionService()
+export const messageService = new SupabaseMessageService()

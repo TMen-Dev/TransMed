@@ -167,8 +167,8 @@ const membreDepuis = computed(() => {
   })
 })
 
-function handleLogout() {
-  authStore.logout()
+async function handleLogout() {
+  await authStore.logout()
   router.replace('/inscription')
 }
 </script>

@@ -16,6 +16,7 @@ export class MockOrdonanceService implements IOrdonanceService {
     this.store.set('demande-001', {
       id: 'ordonance-001',
       demandeId: 'demande-001',
+      storagePath: '',
       base64Data: mockBase64,
       mimeType: 'image/jpeg',
       createdAt: '2026-01-18T08:00:00.000Z',
@@ -23,6 +24,7 @@ export class MockOrdonanceService implements IOrdonanceService {
     this.store.set('demande-002', {
       id: 'ordonance-002',
       demandeId: 'demande-002',
+      storagePath: '',
       base64Data: mockBase64,
       mimeType: 'image/jpeg',
       createdAt: '2026-02-01T14:00:00.000Z',
@@ -40,6 +42,7 @@ export class MockOrdonanceService implements IOrdonanceService {
     const ordonance: Ordonance = {
       id: `ordonance-${crypto.randomUUID()}`,
       demandeId,
+      storagePath: '',
       base64Data,
       mimeType,
       createdAt: new Date().toISOString(),

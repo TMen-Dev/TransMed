@@ -13,7 +13,8 @@
     "test:e2e": "cypress open",
     "lint": "eslint . --ext .vue,.ts --fix",
     "ionic:build": "vite build",
-    "ionic:serve": "vite dev"
+    "ionic:serve": "vite dev",
+    "db:types": "npx supabase gen types typescript --project-id vhealjcvmvvpxgaycfli > src/types/supabase.types.ts"
   },
   "dependencies": {
     "@capacitor/app": "^5.0.0",
@@ -25,6 +26,7 @@
     "@capacitor/status-bar": "^5.0.0",
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
+    "@supabase/supabase-js": "^2.98.0",
     "ionicons": "^7.0.0",
     "pinia": "^2.1.0",
     "pinia-plugin-persistedstate": "^4.0.0",

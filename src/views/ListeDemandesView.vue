@@ -110,13 +110,28 @@
         v-else
         class="demandes-list"
       >
-        <DemandeCard
+        <div
           v-for="(demande, idx) in listeDemandes"
           :key="demande.id"
-          :demande="demande"
-          :style="{ animationDelay: `${idx * 60}ms` }"
-          @click="naviguerVersDetail(demande.id)"
-        />
+          class="demande-item-wrap"
+        >
+          <!-- Badge "Action requise" pour les demandes prêtes (vue patient) -->
+          <div
+            v-if="isPatient && demande.statut === 'pret_acceptation_patient'"
+            class="action-requise-badge"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" />
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+            Action requise
+          </div>
+          <DemandeCard
+            :demande="demande"
+            :style="{ animationDelay: `${idx * 60}ms` }"
+            @click="naviguerVersDetail(demande.id)"
+          />
+        </div>
       </div>
 
       <!-- FAB Patient -->
@@ -165,7 +180,13 @@ const { isPatient, currentUser } = useCurrentUser()
 
 const listeDemandes = computed(() => {
   if (isPatient.value) {
-    return [...demandeStore.demandes].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    return [...demandeStore.demandes].sort((a, b) => {
+      // US3 — "pret_acceptation_patient" en tête de liste pour le patient
+      const aPriority = a.statut === 'pret_acceptation_patient' ? 0 : 1
+      const bPriority = b.statut === 'pret_acceptation_patient' ? 0 : 1
+      if (aPriority !== bPriority) return aPriority - bPriority
+      return b.createdAt.localeCompare(a.createdAt)
+    })
   }
   return demandeStore.demandesActivesAidant
 })
@@ -276,5 +297,27 @@ function naviguerVersDetail(id: string) { router.push(`/app/demandes/${id}`) }
 /* ── Liste ── */
 .demandes-list {
   padding: 8px 0 100px;
+}
+
+/* ── Action requise badge (US3 — 006-patient-notifications) ── */
+.demande-item-wrap {
+  position: relative;
+}
+
+.action-requise-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 16px 0;
+  padding: 5px 12px;
+  background: #FDF0E8;
+  border: 1px solid #E8C4A8;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #C8521A;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  animation: tmPop 0.3s ease both;
 }
 </style>
