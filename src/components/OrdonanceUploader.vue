@@ -119,20 +119,12 @@
       </div>
     </div>
 
-    <!-- Action sheet natif uniquement -->
-    <ion-action-sheet
-      v-if="isNative"
-      :is-open="actionSheetOpen"
-      header="Joindre une ordonnance"
-      :buttons="actionSheetButtons"
-      @did-dismiss="actionSheetOpen = false"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { IonActionSheet } from '@ionic/vue'
+import { actionSheetController } from '@ionic/vue'
 import { Capacitor } from '@capacitor/core'
 import { cameraOutline, imagesOutline, documentOutline } from 'ionicons/icons'
 import type { Ordonance, MimeTypeOrdonance } from '../types/ordonance.types'
@@ -142,14 +134,21 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: Ordonance | null): vo
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const pickError = ref<string | null>(null)
-const actionSheetOpen = ref(false)
 const isNative = Capacitor.isNativePlatform()
 
-function onUploadClick() {
+async function onUploadClick() {
   pickError.value = null
   if (isNative) {
-    // Sur natif : proposer caméra/galerie/fichier via action sheet
-    actionSheetOpen.value = true
+    const sheet = await actionSheetController.create({
+      header: 'Joindre une ordonnance',
+      buttons: [
+        { text: 'Prendre une photo',       icon: cameraOutline,   handler: () => pickFromCameraOrGallery('CAMERA') },
+        { text: 'Choisir dans la galerie', icon: imagesOutline,   handler: () => pickFromCameraOrGallery('PHOTOS') },
+        { text: 'Choisir un fichier PDF',  icon: documentOutline, handler: () => fileInputRef.value?.click() },
+        { text: 'Annuler', role: 'cancel' },
+      ],
+    })
+    await sheet.present()
   } else {
     // Sur web : déclencher directement le sélecteur de fichier (user gesture garanti)
     fileInputRef.value?.click()
@@ -207,16 +206,6 @@ async function pickFromCameraOrGallery(source: 'CAMERA' | 'PHOTOS') {
   }
 }
 
-function pickFromFilesNative() {
-  fileInputRef.value?.click()
-}
-
-const actionSheetButtons = [
-  { text: 'Prendre une photo',       icon: cameraOutline,   handler: () => pickFromCameraOrGallery('CAMERA') },
-  { text: 'Choisir dans la galerie', icon: imagesOutline,   handler: () => pickFromCameraOrGallery('PHOTOS') },
-  { text: 'Choisir un fichier PDF',  icon: documentOutline, handler: () => pickFromFilesNative() },
-  { text: 'Annuler', role: 'cancel' },
-]
 </script>
 
 <style scoped>
