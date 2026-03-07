@@ -368,6 +368,12 @@ function retirerMed(index: number) {
   if (medicaments.value.length > 1) medicaments.value.splice(index, 1)
 }
 
+function isTimeoutError(e: unknown): boolean {
+  if (e instanceof DOMException && e.name === 'AbortError') return true
+  if (e instanceof Error && (e.message.includes('abort') || e.message.includes('timeout') || e.message.includes('network'))) return true
+  return false
+}
+
 async function soumettre() {
   const medsValides = medicaments.value.filter((m) => m.nom.trim() && m.quantite > 0)
   if (!medsValides.length) { erreur.value = 'Veuillez saisir au moins un médicament avec nom et quantité.'; return }
@@ -377,20 +383,38 @@ async function soumettre() {
 
   erreur.value = ''
   loading.value = true
+
+  const dto = {
+    patientId: currentUser.value.id,
+    patientPrenom: currentUser.value.prenom,
+    nom: nom.value.trim() || `${currentUser.value.prenom} — Médicaments`,
+    urgente: urgente.value,
+    medicaments: medsValides,
+    adresseLivraison: adresse.value.trim(),
+    ordonanceBase64: ordonance.value.base64Data ?? ordonance.value.signedUrl,
+    ordonanceMimeType: ordonance.value.mimeType,
+  }
+
   try {
-    await demandeStore.createDemande({
-      patientId: currentUser.value.id,
-      patientPrenom: currentUser.value.prenom,
-      nom: nom.value.trim() || `${currentUser.value.prenom} — Médicaments`,
-      urgente: urgente.value,
-      medicaments: medsValides,
-      adresseLivraison: adresse.value.trim(),
-      ordonanceBase64: ordonance.value.base64Data ?? ordonance.value.signedUrl,
-      ordonanceMimeType: ordonance.value.mimeType,
-    })
+    await demandeStore.createDemande(dto)
     await modalController.dismiss(null, 'created')
   } catch (e) {
-    erreur.value = e instanceof Error ? e.message : 'Erreur lors de la création.'
+    if (isTimeoutError(e)) {
+      // Connexion trop lente → on réessaie une seule fois après 2s (WiFi se réveille)
+      erreur.value = 'Connexion lente, nouvelle tentative…'
+      await new Promise((r) => setTimeout(r, 2000))
+      try {
+        await demandeStore.createDemande(dto)
+        await modalController.dismiss(null, 'created')
+        return
+      } catch (e2) {
+        erreur.value = isTimeoutError(e2)
+          ? 'Connexion réseau insuffisante. Vérifiez votre WiFi et réessayez.'
+          : (e2 instanceof Error ? e2.message : 'Erreur lors de la création.')
+      }
+    } else {
+      erreur.value = e instanceof Error ? e.message : 'Erreur lors de la création.'
+    }
   } finally {
     loading.value = false
   }

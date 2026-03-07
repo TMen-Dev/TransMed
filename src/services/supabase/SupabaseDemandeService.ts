@@ -2,7 +2,7 @@ import type { IDemandeService } from '../interfaces/IDemandeService'
 import type { Demande, CreateDemandeDto, StatutDemande } from '../../types/demande.types'
 import type { Medicament } from '../../types/medicament.types'
 import type { Proposition } from '../../types/proposition.types'
-import { supabase } from '../../lib/supabase'
+import { supabase, makeFreshSupabaseClient } from '../../lib/supabase'
 
 type DemandeRow = {
   id: string
@@ -92,7 +92,11 @@ export class SupabaseDemandeService implements IDemandeService {
   }
 
   async getById(id: string): Promise<Demande> {
-    const { data, error } = await supabase
+    return this._fetchById(id, supabase)
+  }
+
+  private async _fetchById(id: string, db: ReturnType<typeof makeFreshSupabaseClient>): Promise<Demande> {
+    const { data, error } = await db
       .from('demandes')
       .select(SELECT_FULL)
       .eq('id', id)
@@ -125,8 +129,13 @@ export class SupabaseDemandeService implements IDemandeService {
   }
 
   async create(dto: CreateDemandeDto): Promise<Demande> {
+    // On crée un client Supabase neuf (initializePromise vierge, autoRefreshToken
+    // désactivé) pour toute cette opération. Voir makeFreshSupabaseClient() dans
+    // supabase.ts pour l'explication complète du problème Huawei EMUI.
+    const db = makeFreshSupabaseClient()
+
     // 1. Créer la demande
-    const { data: demande, error: demandeErr } = await supabase
+    const { data: demande, error: demandeErr } = await db
       .from('demandes')
       .insert({
         patient_id: dto.patientId,
@@ -142,7 +151,7 @@ export class SupabaseDemandeService implements IDemandeService {
 
     // 2. Créer les médicaments
     if (dto.medicaments.length > 0) {
-      const { error: medErr } = await supabase.from('medicaments').insert(
+      const { error: medErr } = await db.from('medicaments').insert(
         dto.medicaments.map((m) => ({
           demande_id: demande.id,
           nom: m.nom,
@@ -153,37 +162,36 @@ export class SupabaseDemandeService implements IDemandeService {
     }
 
     // 3. Créer la cagnotte
-    const { error: cagErr } = await supabase.from('cagnottes').insert({
-      demande_id: demande.id,
-    })
+    const { error: cagErr } = await db.from('cagnottes').insert({ demande_id: demande.id })
     if (cagErr) throw new Error(`Erreur cagnotte : ${cagErr.message}`)
 
-    // 4. Upload ordonnance si fournie
+    // 4. Upload ordonnance + enregistrement
     if (dto.ordonanceBase64 && dto.ordonanceMimeType) {
       const ext = dto.ordonanceMimeType === 'application/pdf' ? 'pdf'
         : dto.ordonanceMimeType === 'image/png' ? 'png' : 'jpg'
       const path = `${demande.id}/ordonnance.${ext}`
-      // Extraire le base64 brut (supprimer le préfixe data URL s'il est présent)
       const rawBase64 = dto.ordonanceBase64.replace(/^data:[^;]+;base64,/, '')
       const byteChars = atob(rawBase64)
       const byteArr = new Uint8Array(byteChars.length)
       for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i)
       const blob = new Blob([byteArr], { type: dto.ordonanceMimeType })
 
-      const { error: uploadErr } = await supabase.storage
+      const { error: uploadErr } = await db.storage
         .from('ordonnances')
         .upload(path, blob, { contentType: dto.ordonanceMimeType })
 
-      if (!uploadErr) {
-        await supabase.from('ordonnances').insert({
-          demande_id: demande.id,
-          storage_path: path,
-          mime_type: dto.ordonanceMimeType,
-        })
-      }
+      if (uploadErr) throw new Error(`Erreur upload ordonnance : ${uploadErr.message}`)
+
+      await db.from('ordonnances').insert({
+        demande_id: demande.id,
+        storage_path: path,
+        mime_type: dto.ordonanceMimeType,
+      })
     }
 
-    return this.getById(demande.id)
+    // 5. Retourner la demande complète avec toutes ses relations
+    // _fetchById utilise le même client frais pour éviter le singleton bloqué.
+    return this._fetchById(demande.id, db)
   }
 
   async updateStatut(id: string, newStatut: StatutDemande): Promise<Demande> {
