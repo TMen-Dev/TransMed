@@ -76,9 +76,10 @@ router.beforeEach(async (to) => {
     if (user?.role === 'patient') {
       const demandeStore = useDemandeStore()
       if (!demandeStore.demandes.length) await demandeStore.fetchForPatient(user.id)
+      const STATUTS_ACTION_PATIENT = ['rdv_a_fixer', 'en_cours_livraison_patient'] as const
       const demandeEnAttente = demandeStore.demandes.find(
         (d) => d.patientId === user.id &&
-               d.statut === 'pret_acceptation_patient' &&
+               STATUTS_ACTION_PATIENT.includes(d.statut as typeof STATUTS_ACTION_PATIENT[number]) &&
                d.emailNotifEnvoyee,
       )
       if (demandeEnAttente) return `/app/demandes/${demandeEnAttente.id}`

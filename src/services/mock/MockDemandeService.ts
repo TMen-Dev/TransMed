@@ -3,13 +3,13 @@
 import type { IDemandeService } from '../interfaces/IDemandeService'
 import type { Demande, CreateDemandeDto, StatutDemande } from '../../types/demande.types'
 import { MOCK_DEMANDES } from './data/demandes.mock'
-import { ordonanceService, cagnotteService } from '../index'
+import { ordonanceService } from '../index'
 
 const STATUTS_ACTIFS_AIDANT: StatutDemande[] = [
-  'attente_fonds_et_transporteur',
-  'fonds_atteints',
-  'transporteur_disponible',
-  'pret_acceptation_patient',
+  'nouvelle_demande',
+  'medicaments_achetes_attente_transporteur',
+  'transporteur_disponible_attente_acheteur',
+  'transporteur_et_medicaments_prets',
 ]
 
 export class MockDemandeService implements IDemandeService {
@@ -42,30 +42,25 @@ export class MockDemandeService implements IDemandeService {
 
   async create(data: CreateDemandeDto): Promise<Demande> {
     if (!data.medicaments.length) throw new Error('La demande doit contenir au moins un médicament.')
-    if (!data.ordonanceBase64) throw new Error("L'ordonnance est obligatoire (FR-016).")
+    if (!data.ordonanceBase64) throw new Error("L'ordonnance est obligatoire.")
 
-    // Upload ordonnance
     const ordonance = await ordonanceService.upload(
-      `demande-${crypto.randomUUID()}`, // ID temporaire pour l'upload
+      `demande-${crypto.randomUUID()}`,
       data.ordonanceBase64!,
       data.ordonanceMimeType!
     )
 
-    // Créer la cagnotte associée
-    const cagnotte = await cagnotteService.createForDemande(ordonance.demandeId)
-
     const now = new Date().toISOString()
     const demande: Demande = {
-      id: ordonance.demandeId, // Utilise le même ID
+      id: ordonance.demandeId,
       patientId: data.patientId,
       patientPrenom: data.patientPrenom,
       nom: data.nom,
       urgente: data.urgente,
       medicaments: [...data.medicaments],
       adresseLivraison: data.adresseLivraison,
-      statut: 'attente_fonds_et_transporteur',
+      statut: 'nouvelle_demande',
       ordonanceId: ordonance.id,
-      cagnotteId: cagnotte.id,
       propositions: [],
       createdAt: now,
       updatedAt: now,
@@ -77,9 +72,6 @@ export class MockDemandeService implements IDemandeService {
   async updateStatut(id: string, newStatut: StatutDemande): Promise<Demande> {
     const demande = this.demandes.find((d) => d.id === id)
     if (!demande) throw new Error(`Demande introuvable : ${id}`)
-    if (demande.statut === newStatut) {
-      throw new Error(`La demande est déjà au statut "${newStatut}".`)
-    }
     demande.statut = newStatut
     demande.updatedAt = new Date().toISOString()
     if (newStatut === 'traitee') {
@@ -88,13 +80,13 @@ export class MockDemandeService implements IDemandeService {
     return { ...demande, propositions: [...demande.propositions] }
   }
 
-  async confirmerParPatient(id: string): Promise<Demande> {
+  async updateAcheteur(id: string, aidantId: string, aidantPrenom: string): Promise<Demande> {
     const demande = this.demandes.find((d) => d.id === id)
     if (!demande) throw new Error(`Demande introuvable : ${id}`)
-    if (demande.statut !== 'pret_acceptation_patient') {
-      throw new Error('Confirmation impossible — statut attendu : pret_acceptation_patient (FR-213).')
-    }
-    return this.updateStatut(id, 'livraison_confirmee')
+    demande.acheteurId = aidantId
+    demande.acheteurPrenom = aidantPrenom
+    demande.updatedAt = new Date().toISOString()
+    return { ...demande, propositions: [...demande.propositions] }
   }
 
   async updateTransporteur(id: string, aidantId: string, aidantPrenom: string): Promise<Demande> {
@@ -106,20 +98,52 @@ export class MockDemandeService implements IDemandeService {
     return { ...demande, propositions: [...demande.propositions] }
   }
 
-  async marquerLivree(id: string): Promise<Demande> {
+  async setAcheteurLock(id: string, lockedUntil: string): Promise<void> {
     const demande = this.demandes.find((d) => d.id === id)
     if (!demande) throw new Error(`Demande introuvable : ${id}`)
-    if (demande.statut !== 'livraison_confirmee') {
-      throw new Error('Livraison impossible — statut attendu : livraison_confirmee (FR-214).')
+    demande.acheteurLockedUntil = lockedUntil
+    demande.updatedAt = new Date().toISOString()
+  }
+
+  async setTransporteurLock(id: string, lockedUntil: string): Promise<void> {
+    const demande = this.demandes.find((d) => d.id === id)
+    if (!demande) throw new Error(`Demande introuvable : ${id}`)
+    demande.transporteurLockedUntil = lockedUntil
+    demande.updatedAt = new Date().toISOString()
+  }
+
+  async confirmerEnvoiMedicaments(id: string): Promise<Demande> {
+    const demande = this.demandes.find((d) => d.id === id)
+    if (!demande) throw new Error(`Demande introuvable : ${id}`)
+    if (demande.statut !== 'transporteur_et_medicaments_prets') {
+      throw new Error('Envoi impossible — statut attendu : transporteur_et_medicaments_prets.')
     }
-    return this.updateStatut(id, 'livree')
+    return this.updateStatut(id, 'en_cours_livraison_transporteur')
+  }
+
+  async confirmerReceptionTransporteur(id: string): Promise<Demande> {
+    const demande = this.demandes.find((d) => d.id === id)
+    if (!demande) throw new Error(`Demande introuvable : ${id}`)
+    if (demande.statut !== 'en_cours_livraison_transporteur') {
+      throw new Error('Réception impossible — statut attendu : en_cours_livraison_transporteur.')
+    }
+    return this.updateStatut(id, 'rdv_a_fixer')
+  }
+
+  async confirmerRdvFixe(id: string): Promise<Demande> {
+    const demande = this.demandes.find((d) => d.id === id)
+    if (!demande) throw new Error(`Demande introuvable : ${id}`)
+    if (demande.statut !== 'rdv_a_fixer') {
+      throw new Error('RDV impossible — statut attendu : rdv_a_fixer.')
+    }
+    return this.updateStatut(id, 'en_cours_livraison_patient')
   }
 
   async marquerTraitee(id: string, messageRemerciement?: string): Promise<Demande> {
     const demande = this.demandes.find((d) => d.id === id)
     if (!demande) throw new Error(`Demande introuvable : ${id}`)
-    if (demande.statut !== 'livree') {
-      throw new Error('Réception impossible — statut attendu : livree (FR-215).')
+    if (demande.statut !== 'en_cours_livraison_patient') {
+      throw new Error('Réception impossible — statut attendu : en_cours_livraison_patient.')
     }
     if (messageRemerciement) {
       demande.messageRemerciement = messageRemerciement

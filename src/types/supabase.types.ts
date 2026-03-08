@@ -93,6 +93,9 @@ export type Database = {
       }
       demandes: {
         Row: {
+          acheteur_id: string | null
+          acheteur_locked_until: string | null
+          acheteur_prenom: string | null
           adresse_livraison: string
           created_at: string
           delivered_at: string | null
@@ -102,13 +105,18 @@ export type Database = {
           nom: string
           patient_id: string
           patient_prenom: string
+          single_aidant: boolean
           statut: string
           transporteur_id: string | null
+          transporteur_locked_until: string | null
           transporteur_prenom: string | null
           updated_at: string
           urgente: boolean
         }
         Insert: {
+          acheteur_id?: string | null
+          acheteur_locked_until?: string | null
+          acheteur_prenom?: string | null
           adresse_livraison: string
           created_at?: string
           delivered_at?: string | null
@@ -118,13 +126,18 @@ export type Database = {
           nom: string
           patient_id: string
           patient_prenom: string
+          single_aidant?: boolean
           statut?: string
           transporteur_id?: string | null
+          transporteur_locked_until?: string | null
           transporteur_prenom?: string | null
           updated_at?: string
           urgente?: boolean
         }
         Update: {
+          acheteur_id?: string | null
+          acheteur_locked_until?: string | null
+          acheteur_prenom?: string | null
           adresse_livraison?: string
           created_at?: string
           delivered_at?: string | null
@@ -134,8 +147,10 @@ export type Database = {
           nom?: string
           patient_id?: string
           patient_prenom?: string
+          single_aidant?: boolean
           statut?: string
           transporteur_id?: string | null
+          transporteur_locked_until?: string | null
           transporteur_prenom?: string | null
           updated_at?: string
           urgente?: boolean
@@ -303,7 +318,6 @@ export type Database = {
           created_at: string
           demande_id: string
           id: string
-          montant_contribue: number | null
           type: string
         }
         Insert: {
@@ -312,7 +326,6 @@ export type Database = {
           created_at?: string
           demande_id: string
           id?: string
-          montant_contribue?: number | null
           type: string
         }
         Update: {
@@ -321,7 +334,6 @@ export type Database = {
           created_at?: string
           demande_id?: string
           id?: string
-          montant_contribue?: number | null
           type?: string
         }
         Relationships: [

@@ -3,7 +3,7 @@
 import type { Demande } from '../../../types/demande.types'
 
 export const MOCK_DEMANDES: Demande[] = [
-  // ── demande-001 : transporteur_disponible (Alice, cagnotte 45/120€, Leila transporteur)
+  // ── demande-001 : nouvelle_demande (Alice, sans proposition)
   {
     id: 'demande-001',
     patientId: 'patient-alice',
@@ -15,35 +15,14 @@ export const MOCK_DEMANDES: Demande[] = [
       { nom: 'Amoxicilline 500mg', quantite: 1 },
     ],
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
-    statut: 'transporteur_disponible',
+    statut: 'nouvelle_demande',
     ordonanceId: 'ordonance-001',
-    cagnotteId: 'cagnotte-001',
-    propositions: [
-      {
-        id: 'prop-001',
-        demandeId: 'demande-001',
-        aidantId: 'aidant-ben',
-        aidantPrenom: 'Benjamin',
-        type: 'prop1_cagnotte',
-        montantContribue: 45,
-        createdAt: '2026-01-20T10:00:00.000Z',
-      },
-      {
-        id: 'prop-002',
-        demandeId: 'demande-001',
-        aidantId: 'aidant-leila',
-        aidantPrenom: 'Leila',
-        type: 'prop2_transport',
-        createdAt: '2026-01-21T15:00:00.000Z',
-      },
-    ],
-    transporteurId: 'aidant-leila',
-    transporteurPrenom: 'Leila',
+    propositions: [],
     createdAt: '2026-01-18T08:00:00.000Z',
-    updatedAt: '2026-01-21T15:00:00.000Z',
+    updatedAt: '2026-01-18T08:00:00.000Z',
   },
 
-  // ── demande-002 : attente_fonds_et_transporteur (Alice, sans proposition)
+  // ── demande-002 : nouvelle_demande URGENTE (Alice, sans proposition)
   {
     id: 'demande-002',
     patientId: 'patient-alice',
@@ -52,15 +31,14 @@ export const MOCK_DEMANDES: Demande[] = [
     urgente: true,
     medicaments: [{ nom: 'Metformine 850mg', quantite: 3 }],
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
-    statut: 'attente_fonds_et_transporteur',
+    statut: 'nouvelle_demande',
     ordonanceId: 'ordonance-002',
-    cagnotteId: 'cagnotte-002',
     propositions: [],
     createdAt: '2026-02-01T14:00:00.000Z',
     updatedAt: '2026-02-01T14:00:00.000Z',
   },
 
-  // ── demande-003 : attente_fonds_et_transporteur (Karim, sans proposition)
+  // ── demande-003 : medicaments_achetes_attente_transporteur (Karim — scénario 2 en cours)
   {
     id: 'demande-003',
     patientId: 'patient-karim',
@@ -72,15 +50,25 @@ export const MOCK_DEMANDES: Demande[] = [
       { nom: 'Seringues 1ml', quantite: 10 },
     ],
     adresseLivraison: '12 boulevard Krim Belkacem, Oran, Algérie',
-    statut: 'attente_fonds_et_transporteur',
+    statut: 'medicaments_achetes_attente_transporteur',
     ordonanceId: 'ordonance-003',
-    cagnotteId: 'cagnotte-003',
-    propositions: [],
+    propositions: [
+      {
+        id: 'prop-001',
+        demandeId: 'demande-003',
+        aidantId: 'aidant-ben',
+        aidantPrenom: 'Benjamin',
+        type: 'prop_achat_envoi',
+        createdAt: '2026-02-10T09:00:00.000Z',
+      },
+    ],
+    acheteurId: 'aidant-ben',
+    acheteurPrenom: 'Benjamin',
     createdAt: '2026-02-10T09:00:00.000Z',
-    updatedAt: '2026-02-10T09:00:00.000Z',
+    updatedAt: '2026-02-10T09:30:00.000Z',
   },
 
-  // ── demande-004 : fonds_atteints (Alice, cagnotte pleine 150/150€, attend transporteur)
+  // ── demande-004 : transporteur_et_medicaments_prets scénario 1 (Alice, Benjamin achat+transport)
   {
     id: 'demande-004',
     patientId: 'patient-alice',
@@ -92,25 +80,29 @@ export const MOCK_DEMANDES: Demande[] = [
       { nom: 'Atorvastatine 40mg', quantite: 1 },
     ],
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
-    statut: 'fonds_atteints',
+    statut: 'rdv_a_fixer',
     ordonanceId: 'ordonance-004',
-    cagnotteId: 'cagnotte-004',
     propositions: [
       {
-        id: 'prop-003',
+        id: 'prop-002',
         demandeId: 'demande-004',
         aidantId: 'aidant-ben',
         aidantPrenom: 'Benjamin',
-        type: 'prop1_cagnotte',
-        montantContribue: 150,
+        type: 'prop_achat_transport',
         createdAt: '2026-02-12T11:00:00.000Z',
       },
     ],
+    acheteurId: 'aidant-ben',
+    acheteurPrenom: 'Benjamin',
+    transporteurId: 'aidant-ben',
+    transporteurPrenom: 'Benjamin',
+    singleAidant: true,
+    emailNotifEnvoyee: true,
     createdAt: '2026-02-11T10:00:00.000Z',
     updatedAt: '2026-02-12T11:00:00.000Z',
   },
 
-  // ── demande-005 : pret_acceptation_patient (Alice, emailNotifEnvoyee=true → test redirection)
+  // ── demande-005 : en_cours_livraison_transporteur (Alice, scénario 2 — Leila transporteur)
   {
     id: 'demande-005',
     patientId: 'patient-alice',
@@ -119,28 +111,36 @@ export const MOCK_DEMANDES: Demande[] = [
     urgente: true,
     medicaments: [{ nom: 'Oméprazole 20mg', quantite: 2 }],
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
-    statut: 'pret_acceptation_patient',
+    statut: 'en_cours_livraison_transporteur',
     ordonanceId: 'ordonance-005',
-    cagnotteId: 'cagnotte-005',
     propositions: [
       {
-        id: 'prop-004',
+        id: 'prop-003',
         demandeId: 'demande-005',
         aidantId: 'aidant-ben',
         aidantPrenom: 'Benjamin',
-        type: 'prop3_achat_transport',
-        montantContribue: 120,
+        type: 'prop_achat_envoi',
         createdAt: '2026-02-15T14:00:00.000Z',
       },
+      {
+        id: 'prop-004',
+        demandeId: 'demande-005',
+        aidantId: 'aidant-leila',
+        aidantPrenom: 'Leila',
+        type: 'prop_transport',
+        createdAt: '2026-02-15T15:00:00.000Z',
+      },
     ],
-    transporteurId: 'aidant-ben',
-    transporteurPrenom: 'Benjamin',
-    emailNotifEnvoyee: true,
+    acheteurId: 'aidant-ben',
+    acheteurPrenom: 'Benjamin',
+    transporteurId: 'aidant-leila',
+    transporteurPrenom: 'Leila',
+    singleAidant: false,
     createdAt: '2026-02-14T09:00:00.000Z',
-    updatedAt: '2026-02-15T14:00:00.000Z',
+    updatedAt: '2026-02-15T16:00:00.000Z',
   },
 
-  // ── demande-006 : livraison_confirmee (Alice, Benjamin transporteur, patient a confirmé)
+  // ── demande-006 : rdv_a_fixer (Alice, Leila transporteur, attend RDV patient)
   {
     id: 'demande-006',
     patientId: 'patient-alice',
@@ -149,28 +149,37 @@ export const MOCK_DEMANDES: Demande[] = [
     urgente: false,
     medicaments: [{ nom: 'Lisinopril 10mg', quantite: 1 }],
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
-    statut: 'livraison_confirmee',
+    statut: 'rdv_a_fixer',
     ordonanceId: 'ordonance-006',
-    cagnotteId: 'cagnotte-006',
     propositions: [
       {
         id: 'prop-005',
         demandeId: 'demande-006',
-        aidantId: 'aidant-ben',
-        aidantPrenom: 'Benjamin',
-        type: 'prop3_achat_transport',
-        montantContribue: 80,
+        aidantId: 'aidant-leila',
+        aidantPrenom: 'Leila',
+        type: 'prop_transport',
         createdAt: '2026-02-18T10:00:00.000Z',
       },
+      {
+        id: 'prop-006',
+        demandeId: 'demande-006',
+        aidantId: 'aidant-ben',
+        aidantPrenom: 'Benjamin',
+        type: 'prop_achat_envoi',
+        createdAt: '2026-02-18T11:00:00.000Z',
+      },
     ],
-    transporteurId: 'aidant-ben',
-    transporteurPrenom: 'Benjamin',
+    acheteurId: 'aidant-ben',
+    acheteurPrenom: 'Benjamin',
+    transporteurId: 'aidant-leila',
+    transporteurPrenom: 'Leila',
+    singleAidant: false,
     emailNotifEnvoyee: true,
     createdAt: '2026-02-17T08:00:00.000Z',
     updatedAt: '2026-02-19T09:00:00.000Z',
   },
 
-  // ── demande-007 : livree (Alice, Leila transporteur, ordonnance livrée)
+  // ── demande-007 : en_cours_livraison_patient (Alice, Leila en route)
   {
     id: 'demande-007',
     patientId: 'patient-alice',
@@ -182,22 +191,23 @@ export const MOCK_DEMANDES: Demande[] = [
       { nom: 'Ibuprofène 400mg', quantite: 1 },
     ],
     adresseLivraison: '12 boulevard Krim Belkacem, Oran, Algérie',
-    statut: 'livree',
+    statut: 'en_cours_livraison_patient',
     ordonanceId: 'ordonance-007',
-    cagnotteId: 'cagnotte-007',
     propositions: [
       {
-        id: 'prop-006',
+        id: 'prop-007',
         demandeId: 'demande-007',
         aidantId: 'aidant-leila',
         aidantPrenom: 'Leila',
-        type: 'prop3_achat_transport',
-        montantContribue: 60,
+        type: 'prop_achat_transport',
         createdAt: '2026-02-20T10:00:00.000Z',
       },
     ],
+    acheteurId: 'aidant-leila',
+    acheteurPrenom: 'Leila',
     transporteurId: 'aidant-leila',
     transporteurPrenom: 'Leila',
+    singleAidant: true,
     emailNotifEnvoyee: true,
     createdAt: '2026-02-19T11:00:00.000Z',
     updatedAt: '2026-02-21T15:00:00.000Z',
@@ -214,20 +224,21 @@ export const MOCK_DEMANDES: Demande[] = [
     adresseLivraison: '5 rue des Lilas, Alger, Algérie',
     statut: 'traitee',
     ordonanceId: 'ordonance-008',
-    cagnotteId: 'cagnotte-008',
     propositions: [
       {
-        id: 'prop-007',
+        id: 'prop-008',
         demandeId: 'demande-008',
         aidantId: 'aidant-ben',
         aidantPrenom: 'Benjamin',
-        type: 'prop3_achat_transport',
-        montantContribue: 100,
+        type: 'prop_achat_transport',
         createdAt: '2026-02-22T10:00:00.000Z',
       },
     ],
+    acheteurId: 'aidant-ben',
+    acheteurPrenom: 'Benjamin',
     transporteurId: 'aidant-ben',
     transporteurPrenom: 'Benjamin',
+    singleAidant: true,
     emailNotifEnvoyee: true,
     messageRemerciement: 'Merci infiniment à toute l\'équipe TransMed ! Vous avez changé ma vie.',
     createdAt: '2026-02-21T09:00:00.000Z',

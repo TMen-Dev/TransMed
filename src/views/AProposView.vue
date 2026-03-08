@@ -133,12 +133,12 @@
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue'
 
 const ETAPES = [
-  { numero: 1, titre: 'Le patient crée une demande',    emoji: '📋', colorKey: 'green',  description: 'Le patient liste ses médicaments, joint son ordonnance obligatoire et son adresse de livraison.' },
-  { numero: 2, titre: 'Les aidants se mobilisent',      emoji: '🤝', colorKey: 'terra',  description: 'Des aidants bénévoles contribuent à la cagnotte (Prop1), proposent le transport (Prop2) ou s\'engagent à acheter et livrer (Prop3).' },
-  { numero: 3, titre: 'La cagnotte est financée',       emoji: '💰', colorKey: 'gold',   description: 'Un acheteur définit le montant nécessaire. Plusieurs aidants peuvent contribuer jusqu\'à atteindre l\'objectif.' },
-  { numero: 4, titre: 'Le patient confirme',            emoji: '✅', colorKey: 'green',  description: 'Quand fonds et transporteur sont disponibles, le patient valide le lancement de la livraison.' },
-  { numero: 5, titre: 'Livraison en cours',             emoji: '🚗', colorKey: 'blue',   description: 'L\'aidant transporteur récupère les médicaments et les achemine jusqu\'au patient.' },
-  { numero: 6, titre: 'Demande traitée',                emoji: '🎉', colorKey: 'green',  description: 'L\'aidant confirme la livraison. La demande est clôturée et le patient a ses médicaments.' },
+  { numero: 1, titre: 'Le patient crée une demande',          emoji: '📋', colorKey: 'green',  description: 'Le patient liste ses médicaments, joint son ordonnance obligatoire et son adresse de livraison.' },
+  { numero: 2, titre: 'Les aidants proposent leur aide',       emoji: '🤝', colorKey: 'terra',  description: 'Un aidant peut proposer d\'acheter et envoyer les médicaments, de les transporter, ou de s\'en charger entièrement.' },
+  { numero: 3, titre: 'Médicaments et transporteur confirmés', emoji: '📦', colorKey: 'gold',   description: 'Une fois un acheteur et un transporteur disponibles, la demande passe au statut « Prêt ».' },
+  { numero: 4, titre: 'Le patient fixe le rendez-vous',        emoji: '✅', colorKey: 'green',  description: 'Quand tout est prêt, le patient valide le départ et confirme le rendez-vous de livraison.' },
+  { numero: 5, titre: 'Livraison en cours',                    emoji: '🚗', colorKey: 'blue',   description: 'L\'aidant transporteur récupère les médicaments et les achemine jusqu\'au patient.' },
+  { numero: 6, titre: 'Demande traitée',                       emoji: '🎉', colorKey: 'green',  description: 'L\'aidant confirme la livraison. La demande est clôturée et le patient a ses médicaments.' },
 ]
 </script>
 

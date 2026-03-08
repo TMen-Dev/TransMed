@@ -7,9 +7,10 @@ import { demandeService } from '../services/index'
 import { applyTransition, canTransition } from '../services/demandeStateMachine'
 
 const STATUTS_ACTIFS_AIDANT: StatutDemande[] = [
-  'attente_fonds_et_transporteur',
-  'fonds_atteints',
-  'transporteur_disponible',
+  'nouvelle_demande',
+  'medicaments_achetes_attente_transporteur',
+  'transporteur_disponible_attente_acheteur',
+  'transporteur_et_medicaments_prets',
 ]
 
 export const useDemandeStore = defineStore('demandes', () => {
@@ -56,45 +57,43 @@ export const useDemandeStore = defineStore('demandes', () => {
     if (!demande) throw new Error(`Demande introuvable : ${demandeId}`)
 
     const nextStatut = applyTransition(demande.statut, evenement) // throws si illégal
-    if (nextStatut !== demande.statut) {
-      const updated = await demandeService.updateStatut(demandeId, nextStatut)
-      const index = demandes.value.findIndex((d) => d.id === demandeId)
-      if (index !== -1) demandes.value[index] = updated
-    }
-  }
-
-  async function confirmerParPatient(demandeId: string): Promise<void> {
-    const updated = await demandeService.confirmerParPatient(demandeId)
+    const updated = await demandeService.updateStatut(demandeId, nextStatut)
     const index = demandes.value.findIndex((d) => d.id === demandeId)
     if (index !== -1) demandes.value[index] = updated
   }
 
-  async function confirmerLivraison(demandeId: string): Promise<void> {
-    const updated = await demandeService.confirmerParPatient(demandeId)
-    const index = demandes.value.findIndex((d) => d.id === demandeId)
-    if (index !== -1) demandes.value[index] = updated
-  }
-
-  async function livrerOrdonnance(demandeId: string): Promise<void> {
-    const updated = await demandeService.marquerLivree(demandeId)
-    const index = demandes.value.findIndex((d) => d.id === demandeId)
-    if (index !== -1) demandes.value[index] = updated
-  }
-
-  async function recevoirMedicaments(demandeId: string, messageRemerciement?: string): Promise<void> {
-    const updated = await demandeService.marquerTraitee(demandeId, messageRemerciement)
-    const index = demandes.value.findIndex((d) => d.id === demandeId)
-    if (index !== -1) demandes.value[index] = updated
-  }
-
-  async function marquerLivree(demandeId: string): Promise<void> {
-    const updated = await demandeService.marquerLivree(demandeId)
+  async function setAcheteur(demandeId: string, aidantId: string, aidantPrenom: string): Promise<void> {
+    const updated = await demandeService.updateAcheteur(demandeId, aidantId, aidantPrenom)
     const index = demandes.value.findIndex((d) => d.id === demandeId)
     if (index !== -1) demandes.value[index] = updated
   }
 
   async function setTransporteur(demandeId: string, aidantId: string, aidantPrenom: string): Promise<void> {
     const updated = await demandeService.updateTransporteur(demandeId, aidantId, aidantPrenom)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function confirmerEnvoiMedicaments(demandeId: string): Promise<void> {
+    const updated = await demandeService.confirmerEnvoiMedicaments(demandeId)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function confirmerReceptionTransporteur(demandeId: string): Promise<void> {
+    const updated = await demandeService.confirmerReceptionTransporteur(demandeId)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function confirmerRdvFixe(demandeId: string): Promise<void> {
+    const updated = await demandeService.confirmerRdvFixe(demandeId)
+    const index = demandes.value.findIndex((d) => d.id === demandeId)
+    if (index !== -1) demandes.value[index] = updated
+  }
+
+  async function recevoirMedicaments(demandeId: string, messageRemerciement?: string): Promise<void> {
+    const updated = await demandeService.marquerTraitee(demandeId, messageRemerciement)
     const index = demandes.value.findIndex((d) => d.id === demandeId)
     if (index !== -1) demandes.value[index] = updated
   }
@@ -118,13 +117,13 @@ export const useDemandeStore = defineStore('demandes', () => {
     fetchForPatient,
     createDemande,
     triggerTransition,
+    setAcheteur,
     setTransporteur,
-    markEmailNotifSent,
-    confirmerParPatient,
-    confirmerLivraison,
-    livrerOrdonnance,
+    confirmerEnvoiMedicaments,
+    confirmerReceptionTransporteur,
+    confirmerRdvFixe,
     recevoirMedicaments,
-    marquerLivree,
+    markEmailNotifSent,
     getById,
     canTransition,
   }

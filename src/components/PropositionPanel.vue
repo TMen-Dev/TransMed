@@ -17,50 +17,16 @@
       <span>Proposer mon aide</span>
     </div>
 
-    <!-- Définir montant cible -->
+    <!-- Prop : Achat + Envoi au transporteur -->
     <div
-      v-if="cagnotte && cagnotte.statut === 'en_attente_evaluation'"
-      class="definir-section"
-    >
-      <p class="info-text">
-        En tant qu'acheteur, définissez le montant nécessaire pour l'achat.
-      </p>
-      <div
-        class="amount-input-wrap"
-        :class="{ focused: montantFocused }"
-      >
-        <span class="euro-sym">€</span>
-        <input
-          v-model.number="montantCible"
-          type="number"
-          class="amount-input"
-          placeholder="Ex: 120"
-          min="1"
-          @focus="montantFocused = true"
-          @blur="montantFocused = false"
-        >
-      </div>
-      <button
-        class="action-btn green"
-        type="button"
-        @click="handleDefinirMontant"
-      >
-        Définir le montant cible
-      </button>
-      <div class="divider">
-        <span>ou</span>
-      </div>
-    </div>
-
-    <!-- Prop1 : Cagnotte -->
-    <div
-      v-if="canProp1 && cagnotte && cagnotte.statut !== 'en_attente_evaluation'"
+      v-if="canPropAchatEnvoi"
       class="prop-section"
     >
       <button
         class="action-btn outline-green"
         type="button"
-        @click="showContribForm = !showContribForm"
+        :disabled="loading"
+        @click="handlePropAchatEnvoi"
       >
         <svg
           width="16"
@@ -69,46 +35,32 @@
           fill="none"
         >
           <path
-            d="M12 2C10.34 2 9 3.34 9 5H4v2h1l1 12h12l1-12h1V5h-5c0-1.66-1.34-3-3-3z"
+            d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"
             stroke="currentColor"
             stroke-width="1.8"
-            fill="none"
+            stroke-linejoin="round"
           />
-        </svg>
-        Contribuer à la cagnotte
-        <svg
-          class="chevron"
-          :class="{ open: showContribForm }"
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
           <path
-            d="M6 9l6 6 6-6"
+            d="M3 6h18"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.8"
             stroke-linecap="round"
           />
         </svg>
+        Acheter et envoyer au transporteur
       </button>
-      <div
-        v-if="showContribForm"
-        class="contrib-form-wrap"
-      >
-        <ContributionForm @submit="handleProp1" />
-      </div>
     </div>
 
-    <!-- Prop2 : Transport -->
+    <!-- Prop : Transport jusqu'au patient -->
     <div
-      v-if="canProp2"
+      v-if="canPropTransport"
       class="prop-section"
     >
       <button
         class="action-btn outline-blue"
         type="button"
-        @click="handleProp2"
+        :disabled="loading"
+        @click="handlePropTransport"
       >
         <svg
           width="16"
@@ -141,15 +93,16 @@
       </button>
     </div>
 
-    <!-- Prop3 : Achat + Transport -->
+    <!-- Prop : Achat + Transport (aidant unique) -->
     <div
-      v-if="canProp3"
+      v-if="canPropAchatTransport"
       class="prop-section"
     >
       <button
         class="action-btn terra"
         type="button"
-        @click="handleProp3"
+        :disabled="loading"
+        @click="handlePropAchatTransport"
       >
         <svg
           width="16"
@@ -170,7 +123,7 @@
             stroke-linecap="round"
           />
         </svg>
-        Acheter et transporter
+        Acheter et transporter moi-même
       </button>
     </div>
 
@@ -232,69 +185,73 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import ContributionForm from './ContributionForm.vue'
 import { usePropositionsStore } from '../stores/propositions.store'
-import { useCagnotteStore } from '../stores/cagnotte.store'
 import { useCurrentUser } from '../composables/useCurrentUser'
 import { canTransition } from '../services/demandeStateMachine'
 import type { Demande } from '../types/demande.types'
-import type { Cagnotte } from '../types/cagnotte.types'
 
-const props = defineProps<{ demande: Demande; cagnotte: Cagnotte | null }>()
+const props = defineProps<{ demande: Demande }>()
 
 const { currentUser } = useCurrentUser()
 const propositionsStore = usePropositionsStore()
-const cagnotteStore = useCagnotteStore()
 
-const showContribForm = ref(false)
-const montantCible = ref<number | undefined>(undefined)
-const montantFocused = ref(false)
+const loading = ref(false)
 const erreur = ref('')
 const succes = ref('')
 
-const canProp1 = computed(() => canTransition(props.demande.statut, 'prop1_contribution'))
-const canProp2 = computed(() => canTransition(props.demande.statut, 'prop2_transport'))
-const canProp3 = computed(() => canTransition(props.demande.statut, 'prop3_achat_transport'))
+const canPropAchatEnvoi = computed(() =>
+  canTransition(props.demande.statut, 'prop_achat_envoi')
+)
+const canPropTransport = computed(() =>
+  canTransition(props.demande.statut, 'prop_transport')
+)
+const canPropAchatTransport = computed(() =>
+  canTransition(props.demande.statut, 'prop_achat_transport')
+)
 
-async function handleDefinirMontant() {
-  if (montantCible.value === undefined || montantCible.value <= 0) {
-    erreur.value = 'Veuillez saisir un montant supérieur à 0.'; return
-  }
-  if (!props.cagnotte) return
-  erreur.value = ''
+async function handlePropAchatEnvoi() {
+  if (!currentUser.value) return
+  loading.value = true; erreur.value = ''
   try {
-    await cagnotteStore.definirMontantCible({ cagnotteId: props.cagnotte.id, montantCible: montantCible.value }, props.demande.id)
-    succes.value = 'Montant cible défini.'
-    montantCible.value = undefined
+    await propositionsStore.createProposition({
+      demandeId: props.demande.id,
+      aidantId: currentUser.value.id,
+      aidantPrenom: currentUser.value.prenom,
+      type: 'prop_achat_envoi',
+    })
+    succes.value = 'Proposition d\'achat enregistrée — en attente d\'un transporteur.'
   } catch (e) { erreur.value = e instanceof Error ? e.message : 'Erreur' }
+  finally { loading.value = false }
 }
 
-async function handleProp1(montant: number) {
+async function handlePropTransport() {
   if (!currentUser.value) return
-  erreur.value = ''
+  loading.value = true; erreur.value = ''
   try {
-    await propositionsStore.createProposition({ demandeId: props.demande.id, aidantId: currentUser.value.id, aidantPrenom: currentUser.value.prenom, type: 'prop1_cagnotte', montantContribue: montant })
-    succes.value = `Contribution de ${montant} € enregistrée.`
-    showContribForm.value = false
-  } catch (e) { erreur.value = e instanceof Error ? e.message : 'Erreur' }
-}
-
-async function handleProp2() {
-  if (!currentUser.value) return
-  erreur.value = ''
-  try {
-    await propositionsStore.createProposition({ demandeId: props.demande.id, aidantId: currentUser.value.id, aidantPrenom: currentUser.value.prenom, type: 'prop2_transport' })
+    await propositionsStore.createProposition({
+      demandeId: props.demande.id,
+      aidantId: currentUser.value.id,
+      aidantPrenom: currentUser.value.prenom,
+      type: 'prop_transport',
+    })
     succes.value = 'Proposition de transport enregistrée.'
   } catch (e) { erreur.value = e instanceof Error ? e.message : 'Erreur' }
+  finally { loading.value = false }
 }
 
-async function handleProp3() {
+async function handlePropAchatTransport() {
   if (!currentUser.value) return
-  erreur.value = ''
+  loading.value = true; erreur.value = ''
   try {
-    await propositionsStore.createProposition({ demandeId: props.demande.id, aidantId: currentUser.value.id, aidantPrenom: currentUser.value.prenom, type: 'prop3_achat_transport' })
-    succes.value = 'Proposition achat + transport enregistrée.'
+    await propositionsStore.createProposition({
+      demandeId: props.demande.id,
+      aidantId: currentUser.value.id,
+      aidantPrenom: currentUser.value.prenom,
+      type: 'prop_achat_transport',
+    })
+    succes.value = 'Prise en charge complète enregistrée. Le patient sera notifié pour fixer un RDV.'
   } catch (e) { erreur.value = e instanceof Error ? e.message : 'Erreur' }
+  finally { loading.value = false }
 }
 </script>
 
@@ -315,82 +272,14 @@ async function handleProp3() {
   gap: 8px;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1A1510;
-  margin-bottom: 14px;
   color: #C8521A;
+  margin-bottom: 14px;
 }
 
-/* ── Input montant ── */
-.definir-section {
-  margin-bottom: 12px;
-}
-
-.info-text {
-  font-size: 0.84rem;
-  color: #7A6E65;
-  margin: 0 0 10px;
-  line-height: 1.4;
-}
-
-.amount-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1.5px solid #E8E1D9;
-  border-radius: 10px;
-  padding: 0 14px;
-  height: 48px;
-  background: #FAFAF8;
-  margin-bottom: 10px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.amount-input-wrap.focused {
-  border-color: #1B8C5A;
-  box-shadow: 0 0 0 3px rgba(27, 140, 90, 0.12);
-}
-
-.euro-sym { font-size: 1.1rem; font-weight: 700; color: #1B8C5A; }
-
-.amount-input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1A1510;
-  font-family: inherit;
-}
-
-/* ── Divider ── */
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 14px 0;
-  font-size: 0.8rem;
-  color: #C4B8AE;
-}
-.divider::before, .divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #E8E1D9;
-}
-
-/* ── Sections prop ── */
 .prop-section {
   margin-bottom: 10px;
 }
 
-.contrib-form-wrap {
-  border-top: 1px solid #F0EDE8;
-  margin-top: 4px;
-  animation: tmFadeUp 0.25s ease both;
-}
-
-/* ── Boutons d'action ── */
 .action-btn {
   display: flex;
   align-items: center;
@@ -408,39 +297,29 @@ async function handleProp3() {
 }
 
 .action-btn:active { transform: scale(0.97); }
-
-.action-btn.green {
-  background: #1B8C5A;
-  color: white;
-  box-shadow: 0 3px 12px rgba(27, 140, 90, 0.28);
-}
-.action-btn.green:hover { background: #146B45; }
+.action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .action-btn.outline-green {
   background: transparent;
   color: #1B8C5A;
   border: 1.5px solid #1B8C5A;
 }
-.action-btn.outline-green:hover { background: #E8F7F0; }
+.action-btn.outline-green:hover:not(:disabled) { background: #E8F7F0; }
 
 .action-btn.outline-blue {
   background: transparent;
   color: #2B7CC1;
   border: 1.5px solid #2B7CC1;
 }
-.action-btn.outline-blue:hover { background: #EAF3FB; }
+.action-btn.outline-blue:hover:not(:disabled) { background: #EAF3FB; }
 
 .action-btn.terra {
   background: #C8521A;
   color: white;
   box-shadow: 0 3px 12px rgba(200, 82, 26, 0.28);
 }
-.action-btn.terra:hover { background: #A94517; }
+.action-btn.terra:hover:not(:disabled) { background: #A94517; }
 
-.chevron { margin-left: auto; transition: transform 0.2s ease; }
-.chevron.open { transform: rotate(180deg); }
-
-/* ── Feedback ── */
 .feedback {
   display: flex;
   align-items: center;

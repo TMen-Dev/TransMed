@@ -115,9 +115,9 @@
           :key="demande.id"
           class="demande-item-wrap"
         >
-          <!-- Badge "Action requise" pour les demandes prêtes (vue patient) -->
+          <!-- Badge "Action requise" pour les statuts nécessitant une action du patient -->
           <div
-            v-if="isPatient && demande.statut === 'pret_acceptation_patient'"
+            v-if="isPatient && STATUTS_ACTION_PATIENT.has(demande.statut)"
             class="action-requise-badge"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
@@ -178,12 +178,14 @@ const router = useRouter()
 const demandeStore = useDemandeStore()
 const { isPatient, currentUser } = useCurrentUser()
 
+const STATUTS_ACTION_PATIENT = new Set(['rdv_a_fixer', 'en_cours_livraison_patient'])
+
 const listeDemandes = computed(() => {
   if (isPatient.value) {
     return [...demandeStore.demandes].sort((a, b) => {
-      // US3 — "pret_acceptation_patient" en tête de liste pour le patient
-      const aPriority = a.statut === 'pret_acceptation_patient' ? 0 : 1
-      const bPriority = b.statut === 'pret_acceptation_patient' ? 0 : 1
+      // Statuts nécessitant une action du patient en tête de liste
+      const aPriority = STATUTS_ACTION_PATIENT.has(a.statut) ? 0 : 1
+      const bPriority = STATUTS_ACTION_PATIENT.has(b.statut) ? 0 : 1
       if (aPriority !== bPriority) return aPriority - bPriority
       return b.createdAt.localeCompare(a.createdAt)
     })

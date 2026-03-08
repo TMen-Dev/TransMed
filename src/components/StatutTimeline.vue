@@ -54,28 +54,27 @@
 <script setup lang="ts">
 import type { StatutDemande } from '../types/demande.types'
 
-const props = defineProps<{
-  statut: StatutDemande
-  cagnotte?: { montantCollecte: number; montantCible?: number } | null
-}>()
+const props = defineProps<{ statut: StatutDemande }>()
 
 const ETAPES: { statut: StatutDemande; label: string; numero: number }[] = [
-  { statut: 'attente_fonds_et_transporteur', label: 'En attente',   numero: 1 },
-  { statut: 'fonds_atteints',                label: 'Financé',      numero: 2 },
-  { statut: 'transporteur_disponible',        label: 'Transporteur', numero: 3 },
-  { statut: 'pret_acceptation_patient',       label: 'Prêt',        numero: 4 },
-  { statut: 'livraison_confirmee',            label: 'Confirmé',    numero: 5 },
-  { statut: 'livree',                         label: 'Livré',       numero: 6 },
-  { statut: 'traitee',                        label: 'Traité',      numero: 7 },
+  { statut: 'nouvelle_demande',                         label: 'Nouvelle',   numero: 1 },
+  { statut: 'medicaments_achetes_attente_transporteur',  label: 'Achetés',    numero: 2 },
+  { statut: 'transporteur_disponible_attente_acheteur',  label: 'Transporteur', numero: 3 },
+  { statut: 'transporteur_et_medicaments_prets',         label: 'Prêt',       numero: 4 },
+  { statut: 'en_cours_livraison_transporteur',           label: 'En transit', numero: 5 },
+  { statut: 'rdv_a_fixer',                               label: 'RDV',        numero: 6 },
+  { statut: 'en_cours_livraison_patient',                label: 'Livraison',  numero: 7 },
+  { statut: 'traitee',                                   label: 'Traitée',    numero: 8 },
 ]
 
 const ORDRE: StatutDemande[] = [
-  'attente_fonds_et_transporteur',
-  'fonds_atteints',
-  'transporteur_disponible',
-  'pret_acceptation_patient',
-  'livraison_confirmee',
-  'livree',
+  'nouvelle_demande',
+  'medicaments_achetes_attente_transporteur',
+  'transporteur_disponible_attente_acheteur',
+  'transporteur_et_medicaments_prets',
+  'en_cours_livraison_transporteur',
+  'rdv_a_fixer',
+  'en_cours_livraison_patient',
   'traitee',
 ]
 
@@ -83,15 +82,7 @@ function statutIndex(s: StatutDemande): number {
   return ORDRE.indexOf(s)
 }
 
-/**
- * FR-110 — L'étape "Financé" (fonds_atteints) est marquée done uniquement si
- * le montant collecté atteint réellement le montant cible, indépendamment du statut.
- */
 function isEtapeDone(etapeStatut: StatutDemande): boolean {
-  if (etapeStatut === 'fonds_atteints') {
-    if (!props.cagnotte?.montantCible) return false
-    return props.cagnotte.montantCollecte >= props.cagnotte.montantCible
-  }
   return statutIndex(etapeStatut) < statutIndex(props.statut)
 }
 </script>

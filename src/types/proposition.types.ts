@@ -1,6 +1,9 @@
 // src/types/proposition.types.ts
 
-export type TypeProposition = 'prop1_cagnotte' | 'prop2_transport' | 'prop3_achat_transport'
+export type TypeProposition =
+  | 'prop_achat_envoi'     // Acheter les médicaments et les envoyer au transporteur
+  | 'prop_transport'       // Transporter les médicaments jusqu'au patient
+  | 'prop_achat_transport' // Acheter ET transporter (aidant unique — scénario 1)
 
 export interface Proposition {
   id: string
@@ -8,7 +11,6 @@ export interface Proposition {
   aidantId: string
   aidantPrenom: string // dénormalisé
   type: TypeProposition
-  montantContribue?: number // défini uniquement pour prop1_cagnotte
   createdAt: string
 }
 
@@ -17,5 +19,4 @@ export interface CreatePropositionDto {
   aidantId: string
   aidantPrenom: string
   type: TypeProposition
-  montantContribue?: number // requis si type === 'prop1_cagnotte'
 }

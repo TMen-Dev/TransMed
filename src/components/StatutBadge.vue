@@ -15,13 +15,14 @@ import type { StatutDemande } from '../types/demande.types'
 const props = defineProps<{ statut: StatutDemande }>()
 
 const LIBELLES: Record<StatutDemande, string> = {
-  attente_fonds_et_transporteur: 'En attente',
-  fonds_atteints: 'Fonds atteints',
-  transporteur_disponible: 'Transporteur prêt',
-  pret_acceptation_patient: 'À confirmer',
-  livraison_confirmee: 'Confirmée',
-  livree: 'Livrée',
-  traitee: 'Traitée ✓',
+  nouvelle_demande:                         'Nouvelle demande',
+  medicaments_achetes_attente_transporteur:  'Médicaments achetés',
+  transporteur_disponible_attente_acheteur:  'Transporteur disponible',
+  transporteur_et_medicaments_prets:         'Prêt ✓',
+  en_cours_livraison_transporteur:           'En transit',
+  rdv_a_fixer:                               'RDV à fixer',
+  en_cours_livraison_patient:                'En livraison',
+  traitee:                                   'Traitée ✓',
 }
 
 const libelle = computed(() => LIBELLES[props.statut])
@@ -47,55 +48,71 @@ const libelle = computed(() => LIBELLES[props.statut])
   flex-shrink: 0;
 }
 
-/* ── Couleurs par statut ── */
-.statut-attente_fonds_et_transporteur {
+/* ── A — Nouvelle demande ── */
+.statut-nouvelle_demande {
   background: #F0EDE8;
   color: #6B5F58;
 }
-.statut-attente_fonds_et_transporteur .badge-dot { background: #9E8E85; }
+.statut-nouvelle_demande .badge-dot { background: #9E8E85; }
 
-.statut-fonds_atteints {
+/* ── B — Médicaments achetés ── */
+.statut-medicaments_achetes_attente_transporteur {
   background: #FEF9EC;
   color: #956208;
 }
-.statut-fonds_atteints .badge-dot {
+.statut-medicaments_achetes_attente_transporteur .badge-dot {
   background: #C9820A;
   animation: dotPulse 1.5s ease-in-out infinite;
 }
 
-.statut-transporteur_disponible {
+/* ── C — Transporteur disponible ── */
+.statut-transporteur_disponible_attente_acheteur {
   background: #EAF3FB;
   color: #1A5C96;
 }
-.statut-transporteur_disponible .badge-dot { background: #2B7CC1; }
+.statut-transporteur_disponible_attente_acheteur .badge-dot { background: #2B7CC1; }
 
-.statut-pret_acceptation_patient {
+/* ── D — Prêt ── */
+.statut-transporteur_et_medicaments_prets {
   background: #E8F7F0;
   color: #146B45;
 }
-.statut-pret_acceptation_patient .badge-dot {
+.statut-transporteur_et_medicaments_prets .badge-dot {
   background: #1B8C5A;
   animation: dotPulse 1.2s ease-in-out infinite;
 }
 
-.statut-livraison_confirmee {
+/* ── E — En transit vers transporteur ── */
+.statut-en_cours_livraison_transporteur {
   background: #FDF0E8;
   color: #A94517;
 }
-.statut-livraison_confirmee .badge-dot {
+.statut-en_cours_livraison_transporteur .badge-dot {
   background: #C8521A;
   animation: dotPulse 1.3s ease-in-out infinite;
 }
 
-.statut-livree {
+/* ── F — RDV à fixer ── */
+.statut-rdv_a_fixer {
+  background: #F3EDFB;
+  color: #6B35A8;
+}
+.statut-rdv_a_fixer .badge-dot {
+  background: #8B4CC8;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+/* ── G — En livraison patient ── */
+.statut-en_cours_livraison_patient {
   background: #FEF9EC;
   color: #956208;
 }
-.statut-livree .badge-dot {
+.statut-en_cours_livraison_patient .badge-dot {
   background: #C9820A;
   animation: dotPulse 1.5s ease-in-out infinite;
 }
 
+/* ── H — Traitée ── */
 .statut-traitee {
   background: #E8F7F0;
   color: #146B45;

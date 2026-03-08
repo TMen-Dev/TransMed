@@ -14,6 +14,11 @@ type DemandeRow = {
   statut: string
   transporteur_id: string | null
   transporteur_prenom: string | null
+  acheteur_id: string | null
+  acheteur_prenom: string | null
+  acheteur_locked_until: string | null
+  transporteur_locked_until: string | null
+  single_aidant: boolean
   email_notif_envoyee: boolean
   message_remerciement: string | null
   delivered_at: string | null
@@ -25,10 +30,8 @@ type DemandeRow = {
     aidant_id: string
     aidant_prenom: string
     type: string
-    montant_contribue: number | null
     created_at: string
   }[]
-  cagnottes?: { id: string }[]
   ordonnances?: { id: string }[]
 }
 
@@ -45,8 +48,7 @@ export function mapRowToDemande(row: DemandeRow): Demande {
     demandeId: row.id,
     aidantId: p.aidant_id,
     aidantPrenom: p.aidant_prenom,
-    type: p.type as 'prop1_cagnotte' | 'prop2_transport' | 'prop3_achat_transport',
-    montantContribue: p.montant_contribue ?? undefined,
+    type: p.type as Proposition['type'],
     createdAt: p.created_at,
   }))
 
@@ -60,10 +62,14 @@ export function mapRowToDemande(row: DemandeRow): Demande {
     adresseLivraison: row.adresse_livraison,
     statut: row.statut as StatutDemande,
     ordonanceId: row.ordonnances?.[0]?.id ?? '',
-    cagnotteId: row.cagnottes?.[0]?.id ?? '',
     propositions,
     transporteurId: row.transporteur_id ?? undefined,
     transporteurPrenom: row.transporteur_prenom ?? undefined,
+    acheteurId: row.acheteur_id ?? undefined,
+    acheteurPrenom: row.acheteur_prenom ?? undefined,
+    acheteurLockedUntil: row.acheteur_locked_until ?? undefined,
+    transporteurLockedUntil: row.transporteur_locked_until ?? undefined,
+    singleAidant: row.single_aidant,
     emailNotifEnvoyee: row.email_notif_envoyee,
     messageRemerciement: row.message_remerciement ?? undefined,
     createdAt: row.created_at,
@@ -76,7 +82,6 @@ const SELECT_FULL = `
   *,
   medicaments(*),
   propositions(*),
-  cagnottes(id),
   ordonnances(id)
 `
 
@@ -121,7 +126,12 @@ export class SupabaseDemandeService implements IDemandeService {
     const { data, error } = await supabase
       .from('demandes')
       .select(SELECT_FULL)
-      .in('statut', ['attente_fonds_et_transporteur', 'fonds_atteints', 'transporteur_disponible'])
+      .in('statut', [
+        'nouvelle_demande',
+        'medicaments_achetes_attente_transporteur',
+        'transporteur_disponible_attente_acheteur',
+        'transporteur_et_medicaments_prets',
+      ])
       .order('created_at', { ascending: false })
 
     if (error) throw new Error(error.message)
@@ -161,11 +171,7 @@ export class SupabaseDemandeService implements IDemandeService {
       if (medErr) throw new Error(`Erreur médicaments : ${medErr.message}`)
     }
 
-    // 3. Créer la cagnotte
-    const { error: cagErr } = await db.from('cagnottes').insert({ demande_id: demande.id })
-    if (cagErr) throw new Error(`Erreur cagnotte : ${cagErr.message}`)
-
-    // 4. Upload ordonnance + enregistrement
+    // 3. Upload ordonnance + enregistrement
     if (dto.ordonanceBase64 && dto.ordonanceMimeType) {
       const ext = dto.ordonanceMimeType === 'application/pdf' ? 'pdf'
         : dto.ordonanceMimeType === 'image/png' ? 'png' : 'jpg'
@@ -210,10 +216,6 @@ export class SupabaseDemandeService implements IDemandeService {
     return this.getById(id)
   }
 
-  async confirmerParPatient(id: string): Promise<Demande> {
-    return this.updateStatut(id, 'livraison_confirmee')
-  }
-
   async updateTransporteur(id: string, aidantId: string, aidantPrenom: string): Promise<Demande> {
     const { error } = await supabase
       .from('demandes')
@@ -224,8 +226,44 @@ export class SupabaseDemandeService implements IDemandeService {
     return this.getById(id)
   }
 
-  async marquerLivree(id: string): Promise<Demande> {
-    return this.updateStatut(id, 'livree')
+  async updateAcheteur(id: string, aidantId: string, aidantPrenom: string): Promise<Demande> {
+    const { error } = await supabase
+      .from('demandes')
+      .update({ acheteur_id: aidantId, acheteur_prenom: aidantPrenom })
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    return this.getById(id)
+  }
+
+  async setAcheteurLock(id: string, lockedUntil: string): Promise<void> {
+    const { error } = await supabase
+      .from('demandes')
+      .update({ acheteur_locked_until: lockedUntil })
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+  }
+
+  async setTransporteurLock(id: string, lockedUntil: string): Promise<void> {
+    const { error } = await supabase
+      .from('demandes')
+      .update({ transporteur_locked_until: lockedUntil })
+      .eq('id', id)
+
+    if (error) throw new Error(error.message)
+  }
+
+  async confirmerEnvoiMedicaments(id: string): Promise<Demande> {
+    return this.updateStatut(id, 'en_cours_livraison_transporteur')
+  }
+
+  async confirmerReceptionTransporteur(id: string): Promise<Demande> {
+    return this.updateStatut(id, 'rdv_a_fixer')
+  }
+
+  async confirmerRdvFixe(id: string): Promise<Demande> {
+    return this.updateStatut(id, 'en_cours_livraison_patient')
   }
 
   async marquerTraitee(id: string, messageRemerciement?: string): Promise<Demande> {

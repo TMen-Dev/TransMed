@@ -8,9 +8,9 @@
       <span class="demande-nom">{{ demande.nom }}</span>
       <div class="header-badges">
         <span
-          v-if="demande.urgente"
-          class="urgent-badge"
-        >URGENT</span>
+          class="urgence-badge"
+          :class="demande.urgente ? 'urgente' : 'normale'"
+        >{{ demande.urgente ? 'URGENT' : 'Normal' }}</span>
         <StatutBadge :statut="demande.statut" />
       </div>
     </div>
@@ -63,12 +63,13 @@ const props = defineProps<{ demande: Demande }>()
 defineEmits<{ (e: 'click'): void }>()
 
 const ACCENT_MAP: Record<string, string> = {
-  attente_fonds_et_transporteur: 'gray',
-  fonds_atteints: 'gold',
-  transporteur_disponible: 'blue',
-  pret_acceptation_patient: 'green',
-  livraison_confirmee: 'terra',
-  livree: 'green',
+  nouvelle_demande: 'gray',
+  medicaments_achetes_attente_transporteur: 'gold',
+  transporteur_disponible_attente_acheteur: 'blue',
+  transporteur_et_medicaments_prets: 'green',
+  en_cours_livraison_transporteur: 'terra',
+  rdv_a_fixer: 'purple',
+  en_cours_livraison_patient: 'terra',
   traitee: 'green',
 }
 
@@ -113,6 +114,7 @@ function formatDate(iso: string): string {
 .accent-gold   { border-left-color: #C9820A; }
 .accent-terra  { border-left-color: #C8521A; }
 .accent-gray   { border-left-color: #9E8E85; }
+.accent-purple { border-left-color: #8B4CC8; }
 
 /* ── Layout ── */
 .card-header {
@@ -140,14 +142,22 @@ function formatDate(iso: string): string {
   flex-shrink: 0;
 }
 
-.urgent-badge {
-  background: #C0392B;
-  color: white;
+.urgence-badge {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   padding: 2px 7px;
   border-radius: 100px;
+}
+
+.urgence-badge.urgente {
+  background: #C0392B;
+  color: white;
+}
+
+.urgence-badge.normale {
+  background: #F0EDE8;
+  color: #9E8E85;
 }
 
 .card-top {

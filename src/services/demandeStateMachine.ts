@@ -4,34 +4,34 @@
 import type { StatutDemande, TypeEvenement } from '../types/demande.types'
 
 /**
- * Table de transition typée.
- * Chaque cellule correspond à une règle de FR-007.
+ * Table de transition typée — 008-workflow-demandes.
+ * 8 états (A-H), 10 transitions autorisées.
  * Une clé manquante = transition interdite.
  */
 const TRANSITIONS: Record<StatutDemande, Partial<Record<TypeEvenement, StatutDemande>>> = {
-  attente_fonds_et_transporteur: {
-    prop1_contribution: 'attente_fonds_et_transporteur', // contribue mais objectif non atteint
-    prop1_cagnotte_atteinte: 'fonds_atteints',
-    prop2_transport: 'transporteur_disponible',
-    prop3_achat_transport: 'pret_acceptation_patient',
+  nouvelle_demande: {
+    prop_achat_envoi:    'medicaments_achetes_attente_transporteur', // A→B
+    prop_transport:      'transporteur_disponible_attente_acheteur', // A→C
+    prop_achat_transport:'transporteur_et_medicaments_prets',        // A→D (scénario 1)
   },
-  fonds_atteints: {
-    prop2_transport: 'pret_acceptation_patient',
-    prop3_achat_transport: 'pret_acceptation_patient',
+  medicaments_achetes_attente_transporteur: {
+    prop_transport: 'transporteur_et_medicaments_prets', // B→D
   },
-  transporteur_disponible: {
-    prop1_contribution: 'transporteur_disponible',
-    prop1_cagnotte_atteinte: 'pret_acceptation_patient',
-    prop3_achat_transport: 'pret_acceptation_patient',
+  transporteur_disponible_attente_acheteur: {
+    prop_achat_envoi: 'transporteur_et_medicaments_prets', // C→D
   },
-  pret_acceptation_patient: {
-    patient_confirme_livraison: 'livraison_confirmee', // FR-213
+  transporteur_et_medicaments_prets: {
+    acheteur_envoie_medicaments: 'en_cours_livraison_transporteur', // D→E (scénarios 2/3)
+    auto_rdv_patient:            'rdv_a_fixer',                     // D→F (scénario 1, auto)
   },
-  livraison_confirmee: {
-    transporteur_livre: 'livree', // FR-214
+  en_cours_livraison_transporteur: {
+    transporteur_recoit_medicaments: 'rdv_a_fixer', // E→F
   },
-  livree: {
-    patient_recoit_medicaments: 'traitee', // FR-215
+  rdv_a_fixer: {
+    rdv_fixe: 'en_cours_livraison_patient', // F→G
+  },
+  en_cours_livraison_patient: {
+    patient_recoit_medicaments: 'traitee', // G→H
   },
   traitee: {}, // état terminal — aucune transition
 }
@@ -52,7 +52,7 @@ export function applyTransition(statut: StatutDemande, evenement: TypeEvenement)
 
 /**
  * Vérifie si une transition est possible sans la déclencher.
- * Usage dans les composants : v-if="canTransition(demande.statut, 'prop2_transport')"
+ * Usage dans les composants : v-if="canTransition(demande.statut, 'prop_transport')"
  */
 export function canTransition(statut: StatutDemande, evenement: TypeEvenement): boolean {
   return TRANSITIONS[statut][evenement] !== undefined

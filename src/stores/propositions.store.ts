@@ -5,7 +5,6 @@ import { ref } from 'vue'
 import type { Proposition, CreatePropositionDto } from '../types/proposition.types'
 import { propositionService } from '../services/index'
 import { useDemandeStore } from './demandes.store'
-import { useCagnotteStore } from './cagnotte.store'
 import { useNotification } from '../composables/useNotification'
 
 export const usePropositionsStore = defineStore('propositions', () => {
@@ -30,62 +29,71 @@ export const usePropositionsStore = defineStore('propositions', () => {
 
   async function createProposition(data: CreatePropositionDto): Promise<Proposition> {
     const demandeStore = useDemandeStore()
-    const cagnotteStore = useCagnotteStore()
 
+    // Création de la proposition (vérification verrous + état dans le service)
     const proposition = await propositionService.create(data)
 
-    // Mettre à jour la liste locale des propositions (store propositions)
+    // Mettre à jour la liste locale des propositions
     const existing = propositionsParDemande.value.get(data.demandeId) ?? []
     propositionsParDemande.value.set(data.demandeId, [...existing, proposition])
 
-    // H3 — Synchroniser aussi dans demandes[i].propositions pour peutVoirOrdonnance, etc.
+    // Synchroniser dans demandes[i].propositions pour peutVoirOrdonnance, etc.
     const demandeIndex = demandeStore.demandes.findIndex((d) => d.id === data.demandeId)
     if (demandeIndex !== -1) {
       demandeStore.demandes[demandeIndex].propositions.push(proposition)
     }
 
-    // Déclencher la transition de statut
-    if (data.type === 'prop1_cagnotte' && data.montantContribue) {
-      // Ajouter contribution à la cagnotte
+    if (data.type === 'prop_achat_transport') {
+      // Scénario 1 — aidant unique couvre les deux rôles
+      await demandeStore.setAcheteur(data.demandeId, data.aidantId, data.aidantPrenom)
+      await demandeStore.setTransporteur(data.demandeId, data.aidantId, data.aidantPrenom)
+      // Marquer singleAidant dans le store local (le service Supabase le gère côté BDD)
+      const idx = demandeStore.demandes.findIndex((d) => d.id === data.demandeId)
+      if (idx !== -1) demandeStore.demandes[idx].singleAidant = true
+      // A→D
+      await demandeStore.triggerTransition(data.demandeId, 'prop_achat_transport')
+      // D→F automatique (scénario 1) + email patient
+      await demandeStore.triggerTransition(data.demandeId, 'auto_rdv_patient')
+      const demandeApres = demandeStore.getById(data.demandeId)
+      if (demandeApres) {
+        const { checkAndSendEmailNotif } = useNotification()
+        await checkAndSendEmailNotif(demandeApres)
+      }
+
+    } else if (data.type === 'prop_achat_envoi') {
+      // Scénario 2 (A→B) ou scénario 3 phase acheteur (C→D)
+      await demandeStore.setAcheteur(data.demandeId, data.aidantId, data.aidantPrenom)
       const demande = demandeStore.getById(data.demandeId)
-      if (demande) {
-        const { objectifAtteint } = await cagnotteStore.ajouterContribution(
-          {
-            cagnotteId: demande.cagnotteId,
-            aidantId: data.aidantId,
-            aidantPrenom: data.aidantPrenom,
-            montant: data.montantContribue,
-          },
-          data.demandeId
-        )
-        const evenement = objectifAtteint ? 'prop1_cagnotte_atteinte' : 'prop1_contribution'
-        await demandeStore.triggerTransition(data.demandeId, evenement)
-        // FR-118 — Notif email APRÈS la transition (prop1_cagnotte_atteinte peut → pret si transporteur déjà là)
-        const demandeApres1 = demandeStore.getById(data.demandeId)
-        if (demandeApres1) {
+      if (demande?.statut === 'nouvelle_demande') {
+        // A→B
+        await demandeStore.triggerTransition(data.demandeId, 'prop_achat_envoi')
+      } else if (demande?.statut === 'transporteur_disponible_attente_acheteur') {
+        // C→D
+        await demandeStore.triggerTransition(data.demandeId, 'prop_achat_envoi')
+        // Email aidant-transporteur : "un acheteur est prêt"
+        const demandeApres = demandeStore.getById(data.demandeId)
+        if (demandeApres) {
           const { checkAndSendEmailNotif } = useNotification()
-          await checkAndSendEmailNotif(demandeApres1)
+          await checkAndSendEmailNotif(demandeApres)
         }
       }
-    } else if (data.type === 'prop2_transport') {
-      await demandeStore.triggerTransition(data.demandeId, 'prop2_transport')
-      // C1/C2 — Assigner le transporteur
+
+    } else if (data.type === 'prop_transport') {
+      // Scénario 3 (A→C) ou scénario 2 phase transporteur (B→D)
       await demandeStore.setTransporteur(data.demandeId, data.aidantId, data.aidantPrenom)
-      // FR-118 — Vérifier si notification email doit être déclenchée
-      const demandeApresProp2 = demandeStore.getById(data.demandeId)
-      if (demandeApresProp2) {
-        const { checkAndSendEmailNotif } = useNotification()
-        await checkAndSendEmailNotif(demandeApresProp2)
-      }
-    } else if (data.type === 'prop3_achat_transport') {
-      await demandeStore.triggerTransition(data.demandeId, 'prop3_achat_transport')
-      // C1/C2 — Assigner le transporteur (acheteur = transporteur pour Prop3)
-      await demandeStore.setTransporteur(data.demandeId, data.aidantId, data.aidantPrenom)
-      // FR-118 — Vérifier si notification email doit être déclenchée
-      const demandeApresProp3 = demandeStore.getById(data.demandeId)
-      if (demandeApresProp3) {
-        const { checkAndSendEmailNotif } = useNotification()
-        await checkAndSendEmailNotif(demandeApresProp3)
+      const demande = demandeStore.getById(data.demandeId)
+      if (demande?.statut === 'nouvelle_demande') {
+        // A→C
+        await demandeStore.triggerTransition(data.demandeId, 'prop_transport')
+      } else if (demande?.statut === 'medicaments_achetes_attente_transporteur') {
+        // B→D
+        await demandeStore.triggerTransition(data.demandeId, 'prop_transport')
+        // Email aidant-acheteur : "un transporteur est disponible"
+        const demandeApres = demandeStore.getById(data.demandeId)
+        if (demandeApres) {
+          const { checkAndSendEmailNotif } = useNotification()
+          await checkAndSendEmailNotif(demandeApres)
+        }
       }
     }
 
