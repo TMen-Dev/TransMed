@@ -23,6 +23,9 @@ export const MOCK_USERS: Utilisateur[] = [
     email: 'alice@transmed.fr',
     adresseDefaut: '5 rue des Lilas, Alger, Algérie',
     createdAt: '2026-01-10T09:00:00.000Z',
+    lastSeenAt: null,
+    charteAcceptedAt: null,
+    telephone: null,
   },
   {
     id: 'patient-karim',
@@ -31,6 +34,9 @@ export const MOCK_USERS: Utilisateur[] = [
     email: 'karim@transmed.fr',
     adresseDefaut: '12 boulevard Krim Belkacem, Oran, Algérie',
     createdAt: '2026-01-15T14:00:00.000Z',
+    lastSeenAt: null,
+    charteAcceptedAt: null,
+    telephone: null,
   },
   {
     id: 'aidant-ben',
@@ -38,6 +44,9 @@ export const MOCK_USERS: Utilisateur[] = [
     role: 'aidant',
     email: 'benjamin@transmed.fr',
     createdAt: '2026-01-05T08:00:00.000Z',
+    lastSeenAt: null,
+    charteAcceptedAt: null,
+    telephone: null,
   },
   {
     id: 'aidant-leila',
@@ -45,5 +54,8 @@ export const MOCK_USERS: Utilisateur[] = [
     role: 'aidant',
     email: 'leila@transmed.fr',
     createdAt: '2026-01-08T11:00:00.000Z',
+    lastSeenAt: null,
+    charteAcceptedAt: null,
+    telephone: null,
   },
 ]

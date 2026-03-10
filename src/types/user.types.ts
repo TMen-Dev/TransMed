@@ -9,6 +9,10 @@ export interface Utilisateur {
   email: string
   adresseDefaut?: string // pertinent pour Patient (pré-remplit le formulaire)
   createdAt: string // ISO 8601
+  // feature 009
+  lastSeenAt: string | null
+  charteAcceptedAt: string | null
+  telephone: string | null
 }
 
 export interface CreateUtilisateurDto {

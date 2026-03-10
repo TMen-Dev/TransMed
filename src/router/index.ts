@@ -37,6 +37,10 @@ const routes: Array<RouteRecordRaw> = [
         path: 'apropos',
         component: () => import('../views/AProposView.vue'),
       },
+      {
+        path: 'messages',
+        component: () => import('../views/MessagesView.vue'),
+      },
     ],
   },
   {

@@ -32,6 +32,37 @@
           <ion-label>Demandes</ion-label>
         </ion-tab-button>
 
+        <!-- T025 — onglet Messages avec badge non-lus -->
+        <ion-tab-button
+          tab="messages"
+          href="/app/messages"
+        >
+          <div class="tab-icon-wrap tab-messages-wrap">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <ion-badge
+              v-if="unreadCount > 0"
+              class="unread-tab-badge"
+              :color="badgeColor"
+            >
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </ion-badge>
+          </div>
+          <ion-label>Messages</ion-label>
+        </ion-tab-button>
+
         <ion-tab-button
           tab="profil"
           href="/app/profil"
@@ -96,8 +127,11 @@
 
 <script setup lang="ts">
 import {
-  IonPage, IonTabs, IonTabBar, IonTabButton, IonLabel, IonRouterOutlet,
+  IonPage, IonTabs, IonTabBar, IonTabButton, IonLabel, IonRouterOutlet, IonBadge,
 } from '@ionic/vue'
+import { useUnreadMessages } from '../composables/useUnreadMessages'
+
+const { unreadCount, badgeColor } = useUnreadMessages()
 </script>
 
 <style scoped>
@@ -111,5 +145,21 @@ ion-tab-button {
 
 ion-tab-button.tab-selected .tab-icon-wrap {
   transform: scale(1.15);
+}
+
+.tab-messages-wrap {
+  position: relative;
+}
+
+.unread-tab-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  font-size: 0.65rem;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  animation: tmPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 </style>

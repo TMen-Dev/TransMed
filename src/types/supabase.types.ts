@@ -213,6 +213,8 @@ export type Database = {
           created_at: string
           demande_id: string
           id: string
+          is_read: boolean
+          read_at: string | null
         }
         Insert: {
           auteur_id: string
@@ -222,6 +224,8 @@ export type Database = {
           created_at?: string
           demande_id: string
           id?: string
+          is_read?: boolean
+          read_at?: string | null
         }
         Update: {
           auteur_id?: string
@@ -231,6 +235,8 @@ export type Database = {
           created_at?: string
           demande_id?: string
           id?: string
+          is_read?: boolean
+          read_at?: string | null
         }
         Relationships: [
           {
@@ -287,27 +293,36 @@ export type Database = {
       profiles: {
         Row: {
           adresse_defaut: string | null
+          charte_accepted_at: string | null
           created_at: string
           email: string | null
           id: string
+          last_seen_at: string | null
           prenom: string | null
           role: string | null
+          telephone: string | null
         }
         Insert: {
           adresse_defaut?: string | null
+          charte_accepted_at?: string | null
           created_at?: string
           email?: string | null
           id: string
+          last_seen_at?: string | null
           prenom?: string | null
           role?: string | null
+          telephone?: string | null
         }
         Update: {
           adresse_defaut?: string | null
+          charte_accepted_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_seen_at?: string | null
           prenom?: string | null
           role?: string | null
+          telephone?: string | null
         }
         Relationships: []
       }

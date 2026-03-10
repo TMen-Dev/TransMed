@@ -51,16 +51,30 @@
       </span>
       <span class="date">{{ formatDate(demande.createdAt) }}</span>
     </div>
+
+    <!-- T029 — badge aidants intéressés (visible côté patient uniquement) -->
+    <div v-if="isOwner && aidantsCount > 0" class="aidants-interesses-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      {{ aidantsCount }} aidant{{ aidantsCount > 1 ? 's' : '' }} intéressé{{ aidantsCount > 1 ? 's' : '' }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import StatutBadge from './StatutBadge.vue'
+import { useAidantsInteresses } from '../composables/useAidantsInteresses'
+import { useAuthStore } from '../stores/auth.store'
 import type { Demande } from '../types/demande.types'
 
 const props = defineProps<{ demande: Demande }>()
 defineEmits<{ (e: 'click'): void }>()
+
+const authStore = useAuthStore()
+const isOwner = computed(() => authStore.currentUser?.id === props.demande.patientId)
+const { count: aidantsCount } = useAidantsInteresses(props.demande.id)
 
 const ACCENT_MAP: Record<string, string> = {
   nouvelle_demande: 'gray',
@@ -226,5 +240,19 @@ function formatDate(iso: string): string {
   white-space: nowrap;
   font-weight: 500;
   color: #9E8E85;
+}
+
+.aidants-interesses-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  background: #E8F7F0;
+  border: 1px solid #B2DFC8;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #146B45;
 }
 </style>

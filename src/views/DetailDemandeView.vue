@@ -73,6 +73,11 @@
           {{ demande.urgente ? 'Demande urgente' : 'Demande non urgente' }}
         </div>
 
+        <!-- ── Dernière connexion patient (visible pour les aidants) ── -->
+        <div v-if="isAidant && demande.patientId" class="last-seen-row">
+          <LastSeenBadge :user-id="demande.patientId" size="sm" />
+        </div>
+
         <!-- ── Statut + Timeline ── -->
         <div class="section" style="animation-delay: 0ms">
           <StatutBadge :statut="demande.statut" class="statut-badge" />
@@ -136,6 +141,7 @@
               <div class="aidant-info">
                 <span class="aidant-nom">{{ prop.aidantPrenom }}</span>
                 <span class="aidant-type">{{ LIBELLES_PROP[prop.type] }}</span>
+                <ConfianceBadges :user-id="prop.aidantId" :compact="true" />
               </div>
             </div>
           </div>
@@ -293,6 +299,20 @@
           <p class="merci-text">"{{ demande.messageRemerciement }}"</p>
         </div>
 
+        <!-- ── Bouton "Poser une question" (aidant, pré-chat) ── -->
+        <div
+          v-if="isAidant && demande.statut === 'nouvelle_demande'"
+          class="section"
+          style="animation-delay: 280ms"
+        >
+          <button class="pre-chat-btn" type="button" @click="ouvrirPreChat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Poser une question au patient
+          </button>
+        </div>
+
         <!-- ── Panel propositions (aidant) ── -->
         <div
           v-if="isAidant && peutProposer"
@@ -308,6 +328,13 @@
         </div>
       </div>
     </ion-content>
+
+    <!-- ── CharteModal (programmatique via v-if + modalController) ── -->
+    <CharteModal
+      v-if="showCharteModal"
+      @accepter="onCharteAcceptee"
+      @fermer="fermerCharte"
+    />
   </ion-page>
 </template>
 
@@ -323,9 +350,13 @@ import OrdonanceModal from '../components/OrdonanceModal.vue'
 import StatutTimeline from '../components/StatutTimeline.vue'
 import MedicamentItem from '../components/MedicamentItem.vue'
 import PropositionPanel from '../components/PropositionPanel.vue'
+import CharteModal from '../components/CharteModal.vue'
+import LastSeenBadge from '../components/LastSeenBadge.vue'
+import ConfianceBadges from '../components/ConfianceBadges.vue'
 import { useDemandeStore } from '../stores/demandes.store'
 import { useCurrentUser } from '../composables/useCurrentUser'
 import { useDemandeRealtime } from '../composables/useDemandeRealtime'
+import { useCharteAidant } from '../composables/useCharteAidant'
 import { ordonanceService } from '../services/index'
 import type { Ordonance } from '../types/ordonance.types'
 import type { TypeProposition } from '../types/proposition.types'
@@ -342,6 +373,7 @@ const route = useRoute()
 const router = useRouter()
 const demandeStore = useDemandeStore()
 const { currentUser, isPatient, isAidant } = useCurrentUser()
+const { showCharteModal, verifierEtProceder, accepterCharte, fermerCharte } = useCharteAidant()
 
 const ordonanceData = ref<Ordonance | null>(null)
 const envoiLoading = ref(false)
@@ -402,6 +434,18 @@ watch(notifTriggered, async (triggered) => {
 })
 
 function naviguerChat() { router.push(`/app/demandes/${route.params.id}/chat`) }
+
+// T017 — pré-chat : vérifier charte puis naviguer vers le chat
+function ouvrirPreChat() {
+  verifierEtProceder(() => {
+    router.push(`/app/demandes/${route.params.id}/chat`)
+  })
+}
+
+async function onCharteAcceptee() {
+  await accepterCharte()
+  // La navigation sera déclenchée par pendingAction dans useCharteAidant
+}
 
 function telechargerOrdonnance() {
   showToast('Téléchargement simulé — ordonnance.jpg', 'success', 3000)
@@ -549,6 +593,12 @@ async function recevoirMedicaments() {
 
 .not-found { color: #7A6E65; }
 .center-content { display: flex; justify-content: center; align-items: center; height: 50vh; }
+
+.pre-chat-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 50px; background: #EAF3FB; border: 1.5px solid #B0D4F0; border-radius: 12px; color: #2B7CC1; font-size: 0.93rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.18s, transform 0.14s; animation: tmFadeUp 0.35s ease both; }
+.pre-chat-btn:hover { background: #D5E9F8; }
+.pre-chat-btn:active { transform: scale(0.97); }
+
+.last-seen-row { padding: 6px 0 2px; animation: tmFadeUp 0.3s ease both; }
 
 .notif-success-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px; background: #E8F7F0; border: 1px solid #B2DFC8; border-radius: 20px; font-size: 0.82rem; font-weight: 600; color: #146B45; animation: tmPop 0.3s ease both; }
 .notif-echec-banner { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 14px; background: #FDF0E8; border: 1px solid #E8C4A8; border-radius: 10px; font-size: 0.83rem; font-weight: 500; color: #C8521A; }

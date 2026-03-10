@@ -14,6 +14,8 @@ export const useAuthStore = defineStore('auth', () => {
     if (session?.user) {
       try {
         currentUser.value = await userService.getById(session.user.id)
+        // feature 009 — mise à jour last_seen à chaque démarrage de session
+        void userService.mettreAJourLastSeen(session.user.id)
       } catch {
         currentUser.value = null
       }

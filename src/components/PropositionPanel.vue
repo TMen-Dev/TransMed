@@ -127,6 +127,13 @@
       </button>
     </div>
 
+    <!-- CharteModal -->
+    <CharteModal
+      v-if="showCharteModal"
+      @accepter="onCharteAcceptee"
+      @fermer="fermerCharte"
+    />
+
     <!-- Feedback -->
     <div
       v-if="erreur"
@@ -187,13 +194,16 @@
 import { ref, computed } from 'vue'
 import { usePropositionsStore } from '../stores/propositions.store'
 import { useCurrentUser } from '../composables/useCurrentUser'
+import { useCharteAidant } from '../composables/useCharteAidant'
 import { canTransition } from '../services/demandeStateMachine'
 import type { Demande } from '../types/demande.types'
+import CharteModal from './CharteModal.vue'
 
 const props = defineProps<{ demande: Demande }>()
 
 const { currentUser } = useCurrentUser()
 const propositionsStore = usePropositionsStore()
+const { showCharteModal, verifierEtProceder, accepterCharte, fermerCharte } = useCharteAidant()
 
 const loading = ref(false)
 const erreur = ref('')
@@ -209,7 +219,11 @@ const canPropAchatTransport = computed(() =>
   canTransition(props.demande.statut, 'prop_achat_transport')
 )
 
-async function handlePropAchatEnvoi() {
+async function onCharteAcceptee() {
+  await accepterCharte()
+}
+
+async function doPropAchatEnvoi() {
   if (!currentUser.value) return
   loading.value = true; erreur.value = ''
   try {
@@ -224,7 +238,7 @@ async function handlePropAchatEnvoi() {
   finally { loading.value = false }
 }
 
-async function handlePropTransport() {
+async function doPropTransport() {
   if (!currentUser.value) return
   loading.value = true; erreur.value = ''
   try {
@@ -239,7 +253,7 @@ async function handlePropTransport() {
   finally { loading.value = false }
 }
 
-async function handlePropAchatTransport() {
+async function doPropAchatTransport() {
   if (!currentUser.value) return
   loading.value = true; erreur.value = ''
   try {
@@ -253,6 +267,11 @@ async function handlePropAchatTransport() {
   } catch (e) { erreur.value = e instanceof Error ? e.message : 'Erreur' }
   finally { loading.value = false }
 }
+
+// T019 — wrapper les boutons proposition avec verifierEtProceder (charte one-time)
+function handlePropAchatEnvoi() { verifierEtProceder(doPropAchatEnvoi) }
+function handlePropTransport() { verifierEtProceder(doPropTransport) }
+function handlePropAchatTransport() { verifierEtProceder(doPropAchatTransport) }
 </script>
 
 <style scoped>

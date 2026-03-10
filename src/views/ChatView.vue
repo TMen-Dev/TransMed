@@ -11,6 +11,7 @@
             <div class="chat-dot" />
             <span>Chat</span>
           </div>
+          <LastSeenBadge v-if="interlocuteurId" :user-id="interlocuteurId" size="sm" class="chat-last-seen" />
         </ion-title>
       </ion-toolbar>
     </ion-header>
@@ -59,6 +60,13 @@
 
     <!-- Footer input ── -->
     <ion-footer>
+      <!-- T035 — suggestions de messages rapides (visibles si chat vide) -->
+      <QuickReplies
+        v-if="currentUser"
+        :role="currentUser.role"
+        :visible="showSuggestions"
+        @select="onSuggestionSelected"
+      />
       <div class="chat-footer">
         <div
           class="input-wrap"
@@ -103,30 +111,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonFooter,
   IonBackButton, IonButtons,
 } from '@ionic/vue'
 import MessageBubble from '../components/MessageBubble.vue'
+import LastSeenBadge from '../components/LastSeenBadge.vue'
+import QuickReplies from '../components/QuickReplies.vue'
 import { useChat } from '../composables/useChat'
 import { useCurrentUser } from '../composables/useCurrentUser'
+import { useChatStore } from '../stores/chat.store'
+import { useDemandeStore } from '../stores/demandes.store'
 
 const route = useRoute()
 const demandeId = route.params.id as string
 const { currentUser } = useCurrentUser()
 const { messages, loading, fetchMessages, sendMessage, scrollToBottom } = useChat(demandeId)
+const chatStore = useChatStore()
+const demandeStore = useDemandeStore()
+
+// T033 — déduire l'interlocuteur pour le LastSeenBadge
+const interlocuteurId = computed(() => {
+  const demande = demandeStore.getById(demandeId)
+  if (!demande || !currentUser.value) return null
+  if (currentUser.value.role === 'aidant') {
+    return demande.patientId
+  }
+  // Pour le patient : chercher l'aidant le plus récent dans les messages
+  const msgsLocaux = messages.value.filter((m) => m.auteurRole === 'aidant')
+  return msgsLocaux.length > 0 ? msgsLocaux[msgsLocaux.length - 1].auteurId : null
+})
 
 const contenu = ref('')
 const sending = ref(false)
 const inputFocused = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
+const hasSentMessage = ref(false)
+
+// T035 — suggestions visibles uniquement si chat vide et aucun message envoyé
+const showSuggestions = computed(() => messages.value.length === 0 && !hasSentMessage.value)
+
+function onSuggestionSelected(texte: string): void {
+  contenu.value = texte
+}
 
 onMounted(async () => {
   await fetchMessages()
   await nextTick()
   scrollToBottom(messagesContainer)
+  // T018 — marquer les messages comme lus à l'ouverture du chat
+  if (currentUser.value) {
+    void chatStore.markAsRead(demandeId, currentUser.value.id)
+  }
 })
 
 watch(messages, async () => {
@@ -145,6 +183,7 @@ async function envoyer() {
       contenu: contenu.value.trim(),
     })
     contenu.value = ''
+    hasSentMessage.value = true
   } finally {
     sending.value = false
   }
@@ -157,6 +196,11 @@ async function envoyer() {
   display: flex;
   align-items: center;
   gap: 7px;
+}
+
+.chat-last-seen {
+  display: block;
+  margin-top: 2px;
 }
 
 .chat-dot {

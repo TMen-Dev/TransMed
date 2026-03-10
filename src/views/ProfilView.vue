@@ -120,6 +120,36 @@
           </div>
         </div>
 
+        <!-- Badges de confiance -->
+        <div v-if="user" class="confiance-section">
+          <h3 class="section-label">Badges de confiance</h3>
+          <ConfianceBadges :user-id="user.id" :compact="false" />
+        </div>
+
+        <!-- Téléphone -->
+        <div v-if="user" class="tel-section">
+          <h3 class="section-label">Téléphone</h3>
+          <div class="tel-input-row">
+            <input
+              v-model="telephone"
+              type="tel"
+              class="tel-input"
+              placeholder="+33 6 00 00 00 00"
+              :maxlength="20"
+            >
+            <button
+              class="tel-save-btn"
+              :disabled="telLoading"
+              type="button"
+              @click="sauvegarderTelephone"
+            >
+              {{ telLoading ? '…' : 'Enregistrer' }}
+            </button>
+          </div>
+          <p v-if="telSucces" class="tel-succes">✅ Téléphone enregistré</p>
+          <p v-if="telErreur" class="tel-erreur">{{ telErreur }}</p>
+        </div>
+
         <!-- Bouton déconnexion -->
         <button
           class="logout-btn"
@@ -147,16 +177,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue'
 import { useAuthStore } from '../stores/auth.store'
+import ConfianceBadges from '../components/ConfianceBadges.vue'
+import { userService } from '../services/index'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const user = computed(() => authStore.currentUser)
-
 const initiale = computed(() => user.value?.prenom?.[0]?.toUpperCase() ?? '?')
 
 const membreDepuis = computed(() => {
@@ -166,6 +197,30 @@ const membreDepuis = computed(() => {
     year: 'numeric',
   })
 })
+
+const telephone = ref(user.value?.telephone ?? '')
+const telLoading = ref(false)
+const telSucces = ref(false)
+const telErreur = ref('')
+
+async function sauvegarderTelephone() {
+  const userId = user.value?.id
+  if (!userId) return
+  telLoading.value = true; telSucces.value = false; telErreur.value = ''
+  try {
+    await userService.mettreAJourTelephone(userId, telephone.value)
+    telSucces.value = true
+    // Mettre à jour le store local
+    if (authStore.currentUser) {
+      authStore.setUser({ ...authStore.currentUser, telephone: telephone.value.trim() || null })
+    }
+    setTimeout(() => { telSucces.value = false }, 3000)
+  } catch (e) {
+    telErreur.value = e instanceof Error ? e.message : 'Erreur'
+  } finally {
+    telLoading.value = false
+  }
+}
 
 async function handleLogout() {
   await authStore.logout()
@@ -307,6 +362,66 @@ async function handleLogout() {
   background: #E8E1D9;
   margin: 0 16px;
 }
+
+/* ── Confiance & Téléphone ── */
+.confiance-section,
+.tel-section {
+  width: 100%;
+  animation: tmFadeUp 0.35s 0.15s both;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7A6E65;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 10px;
+}
+
+.tel-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tel-input {
+  flex: 1;
+  height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid #E8E1D9;
+  border-radius: 10px;
+  background: #F7F3ED;
+  font-size: 0.93rem;
+  font-family: inherit;
+  color: #1A1510;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tel-input:focus {
+  border-color: #2B7CC1;
+  background: #FFFFFF;
+}
+
+.tel-save-btn {
+  height: 46px;
+  padding: 0 16px;
+  background: #2B7CC1;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.tel-save-btn:hover:not(:disabled) { background: #1A5C96; }
+.tel-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.tel-succes { font-size: 0.82rem; color: #146B45; margin: 6px 0 0; }
+.tel-erreur { font-size: 0.82rem; color: #C0392B; margin: 6px 0 0; }
 
 /* ── Bouton logout ── */
 .logout-btn {

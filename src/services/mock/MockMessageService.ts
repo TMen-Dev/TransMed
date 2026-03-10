@@ -26,6 +26,8 @@ export class MockMessageService implements IMessageService {
       auteurRole: data.auteurRole,
       contenu: data.contenu.trim(),
       createdAt: new Date().toISOString(),
+      isRead: false,
+      readAt: null,
     }
     this.messages.push(message)
     return { ...message }

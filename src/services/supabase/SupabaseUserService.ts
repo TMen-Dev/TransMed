@@ -1,5 +1,6 @@
 import type { IUserService } from '../interfaces/IUserService'
 import type { Utilisateur, CreateUtilisateurDto } from '../../types/user.types'
+import type { BadgeConfiance } from '../../types/confiance.types'
 import { supabase } from '../../lib/supabase'
 
 export class SupabaseUserService implements IUserService {
@@ -23,6 +24,9 @@ export class SupabaseUserService implements IUserService {
       email: data.email ?? '',
       adresseDefaut: data.adresse_defaut ?? undefined,
       createdAt: data.created_at,
+      lastSeenAt: data.last_seen_at ?? null,
+      charteAcceptedAt: data.charte_accepted_at ?? null,
+      telephone: data.telephone ?? null,
     }
   }
 
@@ -56,6 +60,9 @@ export class SupabaseUserService implements IUserService {
       email: data.email,
       adresseDefaut: data.adresseDefaut,
       createdAt: new Date().toISOString(),
+      lastSeenAt: null,
+      charteAcceptedAt: null,
+      telephone: null,
     }
   }
 
@@ -67,5 +74,72 @@ export class SupabaseUserService implements IUserService {
     }
 
     return this.getById(data.user.id)
+  }
+
+  // T011 — feature 009 : méthodes confiance & last_seen
+
+  async accepterCharte(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ charte_accepted_at: new Date().toISOString() })
+      .eq('id', userId)
+
+    if (error) throw new Error(`Erreur acceptation charte : ${error.message}`)
+  }
+
+  async mettreAJourLastSeen(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', userId)
+
+    // Non bloquant — ignorer l'erreur silencieusement
+    if (error) console.warn('mettreAJourLastSeen:', error.message)
+  }
+
+  async mettreAJourTelephone(userId: string, telephone: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ telephone: telephone.trim() || null })
+      .eq('id', userId)
+
+    if (error) throw new Error(`Erreur mise à jour téléphone : ${error.message}`)
+  }
+
+  async getLastSeen(userId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('last_seen_at')
+      .eq('id', userId)
+      .single()
+
+    if (error || !data) return null
+    return data.last_seen_at ?? null
+  }
+
+  async getBadgesConfiance(userId: string): Promise<BadgeConfiance> {
+    // Profil pour téléphone + email
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('telephone, email')
+      .eq('id', userId)
+      .single()
+
+    // Email vérifié via auth.getUser()
+    const { data: authData } = await supabase.auth.getUser()
+    const emailVerifie = !!(authData?.user?.email_confirmed_at)
+
+    // Livraisons réussies : demandes traitées où l'utilisateur était aidant actif
+    const { count: nbLivraisons } = await supabase
+      .from('demandes')
+      .select('id', { count: 'exact', head: true })
+      .eq('statut', 'traitee')
+      .or(`acheteur_id.eq.${userId},transporteur_id.eq.${userId}`)
+
+    return {
+      emailVerifie,
+      telephoneRenseigne: !!(profile?.telephone?.trim()),
+      nbLivraisonsReussies: nbLivraisons ?? 0,
+    }
   }
 }

@@ -10,6 +10,8 @@ export interface Message {
   auteurRole: RoleUtilisateur
   contenu: string // 1–1000 caractères
   createdAt: string
+  isRead: boolean
+  readAt: string | null
 }
 
 export interface SendMessageDto {

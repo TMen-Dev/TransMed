@@ -11,6 +11,8 @@ export const MOCK_MESSAGES: Message[] = [
     auteurRole: 'aidant',
     contenu: 'Bonjour Alice, je peux contribuer à la cagnotte. Quel est le montant total estimé ?',
     createdAt: '2026-01-19T09:15:00.000Z',
+    isRead: true,
+    readAt: '2026-01-19T09:20:00.000Z',
   },
   {
     id: 'msg-002',
@@ -20,6 +22,8 @@ export const MOCK_MESSAGES: Message[] = [
     auteurRole: 'patient',
     contenu: "Bonjour Benjamin ! L'acheteur doit évaluer le montant. Merci pour votre aide !",
     createdAt: '2026-01-19T09:45:00.000Z',
+    isRead: true,
+    readAt: '2026-01-19T10:00:00.000Z',
   },
   {
     id: 'msg-003',
@@ -29,5 +33,7 @@ export const MOCK_MESSAGES: Message[] = [
     auteurRole: 'aidant',
     contenu: 'Je peux transporter les médicaments. Quelle est votre adresse exacte de livraison ?',
     createdAt: '2026-01-20T11:30:00.000Z',
+    isRead: false,
+    readAt: null,
   },
 ]

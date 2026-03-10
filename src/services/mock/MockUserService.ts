@@ -26,6 +26,9 @@ export class MockUserService implements IUserService {
       email: data.email ?? '',
       adresseDefaut: data.adresseDefaut,
       createdAt: new Date().toISOString(),
+      lastSeenAt: null,
+      charteAcceptedAt: null,
+      telephone: null,
     }
     this.users.push(utilisateur)
     return { ...utilisateur }
