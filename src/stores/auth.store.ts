@@ -54,8 +54,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(): Promise<void> {
-    await supabase.auth.signOut()
+    // Effacer l'état local AVANT signOut pour que le guard de navigation
+    // voie immédiatement un utilisateur déconnecté (évite la race condition TOKEN_REFRESHED)
     currentUser.value = null
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // signOut peut échouer si la session est déjà expirée — on est déjà déconnecté localement
+    }
   }
 
   return { currentUser, initSession, login, register, setUser, logout }

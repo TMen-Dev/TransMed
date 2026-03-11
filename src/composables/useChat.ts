@@ -27,7 +27,7 @@ export function useChat(demandeId: string) {
         const newMsg = mapRowToMessage(payload.new as Parameters<typeof mapRowToMessage>[0])
         const existing = chatStore.getForDemande(demandeId)
         if (!existing.find((m) => m.id === newMsg.id)) {
-          chatStore.messagesParDemande.set(demandeId, [...existing, newMsg])
+          chatStore.messagesParDemande[demandeId] = [...existing, newMsg]
         }
       }
     )

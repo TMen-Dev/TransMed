@@ -6,7 +6,7 @@ import type { Message, SendMessageDto } from '../types/message.types'
 import { messageService } from '../services/index'
 
 export const useChatStore = defineStore('chat', () => {
-  const messagesParDemande = ref<Map<string, Message[]>>(new Map())
+  const messagesParDemande = ref<Record<string, Message[]>>({})
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -19,7 +19,7 @@ export const useChatStore = defineStore('chat', () => {
     error.value = null
     try {
       const messages = await messageService.getByDemandeId(demandeId)
-      messagesParDemande.value.set(demandeId, messages)
+      messagesParDemande.value[demandeId] = messages
       return messages
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Erreur de chargement'
@@ -31,30 +31,27 @@ export const useChatStore = defineStore('chat', () => {
 
   async function sendMessage(data: SendMessageDto): Promise<Message> {
     const message = await messageService.send(data)
-    const existing = messagesParDemande.value.get(data.demandeId) ?? []
+    const existing = messagesParDemande.value[data.demandeId] ?? []
     // Dedup : le realtime peut avoir déjà ajouté ce message pendant l'attente de la Promise
     if (!existing.find((m) => m.id === message.id)) {
-      messagesParDemande.value.set(data.demandeId, [...existing, message])
+      messagesParDemande.value[data.demandeId] = [...existing, message]
     }
     return message
   }
 
   function getForDemande(demandeId: string): Message[] {
-    return messagesParDemande.value.get(demandeId) ?? []
+    return messagesParDemande.value[demandeId] ?? []
   }
 
   // T014 — marquer messages comme lus + mettre à jour l'état local
   async function markAsRead(demandeId: string, userId: string): Promise<void> {
     await messageService.marquerCommeLus(demandeId, userId)
     // Mettre à jour l'état local des messages
-    const msgs = messagesParDemande.value.get(demandeId)
+    const msgs = messagesParDemande.value[demandeId]
     if (msgs) {
       const now = new Date().toISOString()
-      messagesParDemande.value.set(
-        demandeId,
-        msgs.map((m) =>
-          m.auteurId !== userId && !m.isRead ? { ...m, isRead: true, readAt: now } : m
-        )
+      messagesParDemande.value[demandeId] = msgs.map((m) =>
+        m.auteurId !== userId && !m.isRead ? { ...m, isRead: true, readAt: now } : m
       )
     }
     // Rafraîchir le compteur global

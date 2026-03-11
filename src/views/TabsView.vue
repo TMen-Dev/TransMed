@@ -7,6 +7,7 @@
         <ion-tab-button
           tab="demandes"
           href="/app/demandes"
+          :selected="currentTab === 'demandes'"
         >
           <div class="tab-icon-wrap">
             <svg
@@ -36,6 +37,7 @@
         <ion-tab-button
           tab="messages"
           href="/app/messages"
+          :selected="currentTab === 'messages'"
         >
           <div class="tab-icon-wrap tab-messages-wrap">
             <svg
@@ -52,13 +54,13 @@
                 stroke-linejoin="round"
               />
             </svg>
-            <ion-badge
+            <span
               v-if="unreadCount > 0"
               class="unread-tab-badge"
-              :color="badgeColor"
+              :class="{ urgent: hasUrgent }"
             >
               {{ unreadCount > 99 ? '99+' : unreadCount }}
-            </ion-badge>
+            </span>
           </div>
           <ion-label>Messages</ion-label>
         </ion-tab-button>
@@ -66,6 +68,7 @@
         <ion-tab-button
           tab="profil"
           href="/app/profil"
+          :selected="currentTab === 'profil'"
         >
           <div class="tab-icon-wrap">
             <svg
@@ -95,6 +98,7 @@
         <ion-tab-button
           tab="apropos"
           href="/app/apropos"
+          :selected="currentTab === 'apropos'"
         >
           <div class="tab-icon-wrap">
             <svg
@@ -126,12 +130,23 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import {
-  IonPage, IonTabs, IonTabBar, IonTabButton, IonLabel, IonRouterOutlet, IonBadge,
+  IonPage, IonTabs, IonTabBar, IonTabButton, IonLabel, IonRouterOutlet,
 } from '@ionic/vue'
 import { useUnreadMessages } from '../composables/useUnreadMessages'
 
-const { unreadCount, badgeColor } = useUnreadMessages()
+const { unreadCount, hasUrgent } = useUnreadMessages()
+
+const route = useRoute()
+const currentTab = computed(() => {
+  const p = route.path
+  if (p.startsWith('/app/messages')) return 'messages'
+  if (p.startsWith('/app/profil')) return 'profil'
+  if (p.startsWith('/app/apropos')) return 'apropos'
+  return 'demandes'
+})
 </script>
 
 <style scoped>
@@ -155,11 +170,29 @@ ion-tab-button.tab-selected .tab-icon-wrap {
   position: absolute;
   top: -4px;
   right: -8px;
-  font-size: 0.65rem;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 9px;
+  /* Taille fixe pour les chiffres simples, pill pour 2+ chiffres */
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  /* Centrage parfait du chiffre */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Typographie serrée */
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1;
+  /* Couleurs */
+  background: #D68910;
+  color: #ffffff;
+  /* Séparation visuelle de l'icône */
+  border: 1.5px solid #ffffff;
   animation: tmPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.unread-tab-badge.urgent {
+  background: #C0392B;
 }
 </style>

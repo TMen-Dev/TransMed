@@ -70,18 +70,35 @@ export class SupabaseMessageService implements IMessageService {
   }
 
   // T009 — compter messages non-lus pour l'utilisateur
+  // Inclut les demandes assignées (patient/acheteur/transporteur) ET les demandes
+  // où l'utilisateur a participé via messages (aidant pré-assigné)
   async countNonLus(userId: string): Promise<{ count: number; hasUrgent: boolean }> {
+    const [{ data: assignedDemands }, { data: participatedMsgs }] = await Promise.all([
+      supabase
+        .from('demandes')
+        .select('id')
+        .or(`patient_id.eq.${userId},acheteur_id.eq.${userId},transporteur_id.eq.${userId}`),
+      supabase
+        .from('messages')
+        .select('demande_id')
+        .eq('auteur_id', userId),
+    ])
+
+    const demandeIds = [...new Set([
+      ...(assignedDemands ?? []).map((d) => d.id),
+      ...(participatedMsgs ?? []).map((m) => m.demande_id),
+    ])]
+
+    if (demandeIds.length === 0) return { count: 0, hasUrgent: false }
+
     const { data, error } = await supabase
       .from('messages')
-      .select('id, demandes!inner(urgente, patient_id, acheteur_id, transporteur_id)')
+      .select('id, demandes!inner(urgente)')
       .neq('auteur_id', userId)
       .eq('is_read', false)
-      .or(`patient_id.eq.${userId},acheteur_id.eq.${userId},transporteur_id.eq.${userId}`, { foreignTable: 'demandes' })
+      .in('demande_id', demandeIds)
 
-    if (error) {
-      // Fallback : requête simplifiée sans filtre urgente si JOIN échoue
-      return { count: 0, hasUrgent: false }
-    }
+    if (error) return { count: 0, hasUrgent: false }
 
     const count = data?.length ?? 0
     const hasUrgent = (data ?? []).some((row) => {

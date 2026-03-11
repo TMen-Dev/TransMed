@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title>Messages</ion-title>
+        <ion-title>{{ titre }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -21,43 +21,53 @@
         <p class="empty-hint">Vos échanges avec les aidants ou patients apparaîtront ici.</p>
       </div>
 
-      <ion-list v-else class="conv-list">
-        <ion-item
+      <div v-else class="conv-list">
+        <div
           v-for="conv in conversations"
           :key="conv.demandeId"
-          class="conv-item"
-          button
-          :detail="false"
+          class="conv-card"
+          :class="{ 'has-unread': conv.unreadCount > 0, 'is-urgent': conv.hasUrgent }"
           @click="ouvrirChat(conv.demandeId)"
         >
-          <div class="conv-avatar" slot="start">
-            <span>{{ conv.nomDemande[0]?.toUpperCase() }}</span>
+          <!-- Initiale de la demande -->
+          <div class="conv-avatar">
+            {{ conv.nomDemande[0]?.toUpperCase() }}
           </div>
 
           <div class="conv-body">
-            <div class="conv-header-row">
-              <span class="conv-nom">{{ conv.nomDemande }}</span>
-              <span class="conv-date">{{ formatDate(conv.lastMessageAt) }}</span>
-            </div>
-            <div class="conv-footer-row">
-              <span class="conv-apercu">{{ conv.lastMessage }}</span>
-              <span v-if="conv.unreadCount > 0" class="unread-badge" :class="conv.hasUrgent ? 'urgent' : ''">
+            <!-- Ligne 1 : nom + badge non-lus -->
+            <div class="conv-top">
+              <span class="conv-nom" :class="{ 'conv-nom--unread': conv.unreadCount > 0 }">
+                {{ conv.nomDemande }}
+              </span>
+              <span
+                v-if="conv.unreadCount > 0"
+                class="unread-badge"
+                :class="{ urgent: conv.hasUrgent }"
+              >
                 {{ conv.unreadCount }}
               </span>
             </div>
+
+            <!-- Ligne 2 : aperçu du message · heure -->
+            <div class="conv-bottom">
+              <span class="conv-apercu">{{ conv.lastMessage }}</span>
+              <span class="conv-sep">·</span>
+              <span class="conv-date">{{ formatDate(conv.lastMessageAt) }}</span>
+            </div>
           </div>
-        </ion-item>
-      </ion-list>
+        </div>
+      </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonList, IonItem,
+  onIonViewWillEnter,
 } from '@ionic/vue'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/auth.store'
@@ -76,23 +86,64 @@ const authStore = useAuthStore()
 const conversations = ref<Conversation[]>([])
 const loading = ref(true)
 
-onMounted(async () => {
+const titre = computed(() =>
+  loading.value ? 'Discussions' : `Discussions (${conversations.value.length})`
+)
+
+// onIonViewWillEnter couvre le premier rendu ET les retours depuis le cache Ionic (pas besoin de onMounted)
+onIonViewWillEnter(async () => {
   await chargerConversations()
 })
 
-async function chargerConversations(): Promise<void> {
-  const userId = authStore.currentUser?.id
-  if (!userId) return
+// Realtime — rafraîchir silencieusement quand un nouveau message arrive (sans skeleton)
+const channel = supabase
+  .channel('messages-view-realtime')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => {
+    void chargerConversations(true)
+  })
+  .subscribe()
 
-  loading.value = true
+onUnmounted(() => {
+  channel.unsubscribe()
+})
+
+async function chargerConversations(silent = false): Promise<void> {
+  const userId = authStore.currentUser?.id
+  if (!userId) {
+    loading.value = false
+    return
+  }
+
+  if (!silent) loading.value = true
   try {
-    // Récupérer les demandes de l'utilisateur
-    const { data: demandes } = await supabase
+    // Récupérer les demandes assignées (patient / acheteur / transporteur)
+    const { data: demandesAssignees } = await supabase
       .from('demandes')
       .select('id, nom, urgente')
       .or(`patient_id.eq.${userId},acheteur_id.eq.${userId},transporteur_id.eq.${userId}`)
 
-    if (!demandes?.length) {
+    // Récupérer les demandes où l'utilisateur a participé via messages (aidant pré-assigné)
+    const { data: msgParticipation } = await supabase
+      .from('messages')
+      .select('demande_id')
+      .eq('auteur_id', userId)
+
+    const extraIds = [...new Set((msgParticipation ?? []).map((m) => m.demande_id))]
+    const assigneeIds = new Set((demandesAssignees ?? []).map((d) => d.id))
+    const missingIds = extraIds.filter((id) => !assigneeIds.has(id))
+
+    let demandesExtra: { id: string; nom: string; urgente: boolean }[] = []
+    if (missingIds.length > 0) {
+      const { data } = await supabase
+        .from('demandes')
+        .select('id, nom, urgente')
+        .in('id', missingIds)
+      demandesExtra = data ?? []
+    }
+
+    const demandes = [...(demandesAssignees ?? []), ...demandesExtra]
+
+    if (!demandes.length) {
       conversations.value = []
       return
     }
@@ -100,7 +151,6 @@ async function chargerConversations(): Promise<void> {
     const demandeIds = demandes.map((d) => d.id)
 
     // Pour chaque demande, récupérer le dernier message et le count non-lus
-    // Triés par MAX(created_at) décroissant
     const { data: messages } = await supabase
       .from('messages')
       .select('demande_id, contenu, created_at, auteur_id, is_read')
@@ -120,7 +170,6 @@ async function chargerConversations(): Promise<void> {
         const demande = demandes.find((d) => d.id === msg.demande_id)
         if (!demande) continue
 
-        // Compter les non-lus pour cette demande
         const unreadCount = messages.filter(
           (m) => m.demande_id === msg.demande_id && m.auteur_id !== userId && !m.is_read
         ).length
@@ -161,18 +210,19 @@ function formatDate(iso: string): string {
 </script>
 
 <style scoped>
+/* ── Skeleton ── */
 .loading-pad {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .skeleton-row {
-  height: 72px;
+  height: 68px;
   background: linear-gradient(90deg, #ECE8E0 25%, #F5F1EB 50%, #ECE8E0 75%);
   background-size: 200% 100%;
-  border-radius: 12px;
+  border-radius: 14px;
   animation: skeletonWave 1.6s ease-in-out infinite;
 }
 
@@ -181,6 +231,7 @@ function formatDate(iso: string): string {
   100% { background-position: -200% 0; }
 }
 
+/* ── Empty state ── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -214,94 +265,143 @@ function formatDate(iso: string): string {
   margin: 0;
 }
 
+/* ── Liste ── */
 .conv-list {
-  padding: 8px 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
-.conv-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --inner-padding-end: 0;
-  --background: transparent;
-  --border-color: #F0EDE8;
+/* ── Carte conversation ── */
+.conv-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  padding: 13px 14px;
+  /* Ombre + bordure subtile pour séparation claire des items */
+  box-shadow: 0 1px 5px rgba(26, 21, 16, 0.07), 0 0 0 1px rgba(232, 225, 217, 0.6);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  overflow: hidden;
 }
 
+.conv-card:active {
+  transform: scale(0.988);
+  box-shadow: 0 1px 2px rgba(26, 21, 16, 0.05), 0 0 0 1px rgba(232, 225, 217, 0.6);
+}
+
+/* Barre latérale gauche : indicateur message non-lu */
+.conv-card.has-unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: #D68910;
+}
+
+.conv-card.is-urgent::before {
+  background: #C0392B;
+}
+
+/* ── Avatar initiale ── */
 .conv-avatar {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #E8F7F0, #EAF3FB);
-  border: 1.5px solid #C6EADA;
+  background: linear-gradient(135deg, #D4F0E2, #D4E8F5);
+  border: 1.5px solid #C0E8D4;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1B8C5A;
-  margin-right: 12px;
   flex-shrink: 0;
 }
 
+/* ── Corps de la carte ── */
 .conv-body {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 12px 0;
-  min-width: 0;
 }
 
-.conv-header-row {
+/* Ligne 1 : nom de la demande + badge */
+.conv-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
 .conv-nom {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #1A1510;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3A3028;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.conv-date {
-  font-size: 0.75rem;
-  color: #9E8E85;
-  white-space: nowrap;
-  flex-shrink: 0;
+.conv-nom--unread {
+  font-weight: 700;
+  color: #1A1510;
 }
 
-.conv-footer-row {
+/* Ligne 2 : aperçu du message · heure — sur une seule ligne */
+.conv-bottom {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 0;
+  min-width: 0;
 }
 
 .conv-apercu {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: #7A6E65;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+  min-width: 0;
 }
 
+.conv-sep {
+  font-size: 0.78rem;
+  color: #C4B8AE;
+  flex-shrink: 0;
+  padding: 0 5px;
+}
+
+.conv-date {
+  font-size: 0.78rem;
+  color: #9E8E85;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Badge non-lus ── */
 .unread-badge {
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
   background: #D68910;
-  color: white;
-  font-size: 0.72rem;
+  color: #ffffff;
+  font-size: 0.68rem;
   font-weight: 700;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
+  padding: 0 5px;
   flex-shrink: 0;
 }
 

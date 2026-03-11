@@ -223,8 +223,11 @@ async function sauvegarderTelephone() {
 }
 
 async function handleLogout() {
-  await authStore.logout()
-  router.replace('/inscription')
+  try {
+    await authStore.logout()
+  } finally {
+    router.replace('/inscription')
+  }
 }
 </script>
 
