@@ -52,4 +52,10 @@ TypeScript 5+ (strict mode): Follow standard conventions
 
 ### Supabase colums réels (demandes)
 - `acheteur_id` et `transporteur_id` (PAS `aidant_acheteur_id`/`aidant_transporteur_id`)
+
+### Suppression demande (feature 010)
+- `alertController.create()` programmatique pour confirmation (EMUI — jamais `<IonAlert>` déclaratif)
+- Ordre cascade : Storage.remove → ordonnances → messages → propositions → demandes
+- `STATUTS_ANNULABLES` : `nouvelle_demande`, `medicaments_achetes_attente_transporteur`, `transporteur_disponible_attente_acheteur`
+- `router.replace('/app/demandes')` après succès (pas `push` pour éviter back vers demande supprimée)
 <!-- MANUAL ADDITIONS END -->

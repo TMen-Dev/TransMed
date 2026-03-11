@@ -1,5 +1,6 @@
 import type { IDemandeService } from '../interfaces/IDemandeService'
 import type { Demande, CreateDemandeDto, StatutDemande } from '../../types/demande.types'
+import { STATUTS_ANNULABLES } from '../../types/demande.types'
 import type { Medicament } from '../../types/medicament.types'
 import type { Proposition } from '../../types/proposition.types'
 import { supabase, makeFreshSupabaseClient } from '../../lib/supabase'
@@ -285,5 +286,68 @@ export class SupabaseDemandeService implements IDemandeService {
 
     if (error) throw new Error(error.message)
     return this.getById(id)
+  }
+
+  async delete(id: string): Promise<void> {
+    // 1. Vérifier le statut avant de supprimer (garde d'état — US2)
+    const { data: demandeCheck, error: checkErr } = await supabase
+      .from('demandes')
+      .select('statut')
+      .eq('id', id)
+      .single()
+
+    if (checkErr || !demandeCheck) throw new Error('Demande introuvable ou non autorisée')
+
+    const statut = demandeCheck.statut as StatutDemande
+    if (!STATUTS_ANNULABLES.includes(statut)) {
+      throw new Error(`Suppression impossible : demande en cours (état ${statut})`)
+    }
+
+    // 2. Récupérer le storage_path de l'ordonnance (SELECT_FULL ne retourne que ordonnances(id))
+    const { data: ordRow } = await supabase
+      .from('ordonnances')
+      .select('storage_path')
+      .eq('demande_id', id)
+      .maybeSingle()
+
+    // 3. Supprimer le fichier Storage (best-effort — ne bloque pas si absent ou erreur)
+    if (ordRow?.storage_path) {
+      const { error: storageErr } = await supabase.storage
+        .from('ordonnances')
+        .remove([ordRow.storage_path])
+      if (storageErr) {
+        console.warn(`[delete] Storage.remove warning (non-bloquant) : ${storageErr.message}`)
+      }
+    }
+
+    // 4. Supprimer les messages (explicite — sans dépendance au CASCADE)
+    const { error: msgErr } = await supabase
+      .from('messages')
+      .delete()
+      .eq('demande_id', id)
+    if (msgErr) throw new Error(`Erreur suppression messages : ${msgErr.message}`)
+
+    // 5. Supprimer les propositions (explicite)
+    const { error: propErr } = await supabase
+      .from('propositions')
+      .delete()
+      .eq('demande_id', id)
+    if (propErr) throw new Error(`Erreur suppression propositions : ${propErr.message}`)
+
+    // 6. Supprimer l'entrée ordonnance (explicite)
+    const { error: ordErr } = await supabase
+      .from('ordonnances')
+      .delete()
+      .eq('demande_id', id)
+    if (ordErr) throw new Error(`Erreur suppression ordonnance : ${ordErr.message}`)
+
+    // 7. Supprimer la demande — RLS garantit patient_id = auth.uid()
+    const { error: delErr, count } = await supabase
+      .from('demandes')
+      .delete({ count: 'exact' })
+      .eq('id', id)
+
+    if (delErr) throw new Error(`Erreur suppression demande : ${delErr.message}`)
+    if (count === 0) throw new Error('Demande introuvable ou non autorisée')
   }
 }

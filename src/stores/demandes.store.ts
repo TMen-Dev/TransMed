@@ -104,6 +104,11 @@ export const useDemandeStore = defineStore('demandes', () => {
     if (index !== -1) demandes.value[index] = updated
   }
 
+  async function supprimerDemande(id: string): Promise<void> {
+    await demandeService.delete(id)
+    demandes.value = demandes.value.filter((d) => d.id !== id)
+  }
+
   function getById(id: string): Demande | undefined {
     return demandes.value.find((d) => d.id === id)
   }
@@ -124,6 +129,7 @@ export const useDemandeStore = defineStore('demandes', () => {
     confirmerRdvFixe,
     recevoirMedicaments,
     markEmailNotifSent,
+    supprimerDemande,
     getById,
     canTransition,
   }

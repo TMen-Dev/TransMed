@@ -322,6 +322,25 @@
           <PropositionPanel :demande="demande" />
         </div>
 
+        <!-- ── Suppression demande (patient, états annulables) ── -->
+        <div
+          v-if="isPatient && demande && STATUTS_ANNULABLES.includes(demande.statut)"
+          class="section"
+          style="animation-delay: 320ms"
+        >
+          <button
+            class="delete-btn"
+            :disabled="suppressionLoading"
+            type="button"
+            @click="supprimerDemande"
+          >
+            <svg v-if="!suppressionLoading" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            {{ suppressionLoading ? 'Suppression…' : 'Supprimer la demande' }}
+          </button>
+        </div>
+
         <!-- ── Erreur action ── -->
         <div v-if="actionError" class="action-erreur">
           {{ actionError }}
@@ -362,6 +381,7 @@ import type { Ordonance } from '../types/ordonance.types'
 import type { TypeProposition } from '../types/proposition.types'
 import { canTransition } from '../services/demandeStateMachine'
 import { useNotification } from '../composables/useNotification'
+import { STATUTS_ANNULABLES } from '../types/demande.types'
 
 const LIBELLES_PROP: Record<TypeProposition, string> = {
   prop_achat_envoi:    'Achat + envoi au transporteur',
@@ -380,6 +400,7 @@ const envoiLoading = ref(false)
 const receptionTransporteurLoading = ref(false)
 const rdvLoading = ref(false)
 const receptionLoading = ref(false)
+const suppressionLoading = ref(false)
 const actionError = ref('')
 
 async function showToast(message: string, color = 'success', duration = 4000) {
@@ -494,6 +515,37 @@ async function confirmerRdv() {
   finally { rdvLoading.value = false }
 }
 
+// Suppression demande (feature 010)
+async function supprimerDemande() {
+  if (!demande.value) return
+  const alert = await alertController.create({
+    header: 'Supprimer la demande',
+    message: 'Cette action est irréversible. La demande et toutes ses données seront supprimées.',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      {
+        text: 'Supprimer',
+        role: 'destructive',
+        cssClass: 'alert-btn-danger',
+        handler: async () => {
+          suppressionLoading.value = true
+          actionError.value = ''
+          try {
+            await demandeStore.supprimerDemande(demande.value!.id)
+            await showToast('Demande supprimée.', 'success', 3000)
+            router.replace('/app/demandes')
+          } catch (e) {
+            actionError.value = e instanceof Error ? e.message : 'Erreur lors de la suppression'
+          } finally {
+            suppressionLoading.value = false
+          }
+        },
+      },
+    ],
+  })
+  await alert.present()
+}
+
 // G→H : Patient confirme réception finale
 async function recevoirMedicaments() {
   if (!demande.value) return
@@ -602,4 +654,9 @@ async function recevoirMedicaments() {
 
 .notif-success-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px; background: #E8F7F0; border: 1px solid #B2DFC8; border-radius: 20px; font-size: 0.82rem; font-weight: 600; color: #146B45; animation: tmPop 0.3s ease both; }
 .notif-echec-banner { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 14px; background: #FDF0E8; border: 1px solid #E8C4A8; border-radius: 10px; font-size: 0.83rem; font-weight: 500; color: #C8521A; }
+
+.delete-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; background: transparent; border: 1.5px solid #E0665A; border-radius: 12px; color: #C0392B; font-size: 0.9rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 0.18s, transform 0.14s; animation: tmFadeUp 0.35s ease both; }
+.delete-btn:hover { background: #FDEDEC; }
+.delete-btn:active { transform: scale(0.97); }
+.delete-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

@@ -84,4 +84,14 @@ export interface IDemandeService {
    * Marque la notification email comme envoyée pour éviter les doublons.
    */
   markEmailNotifSent(id: string): Promise<Demande>
+
+  /**
+   * Supprime une demande et toutes ses données associées.
+   * Supprime dans l'ordre : fichier Storage ordonnance (best-effort), messages, propositions, ordonnances, demande.
+   * @param id - identifiant de la demande
+   * @throws si la demande n'existe pas ou n'appartient pas au patient connecté
+   * @throws si l'état de la demande n'est pas dans STATUTS_ANNULABLES
+   * @throws si la suppression SQL échoue (sauf erreur Storage orphelin — warning seulement)
+   */
+  delete(id: string): Promise<void>
 }

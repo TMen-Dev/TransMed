@@ -13,6 +13,13 @@ export type StatutDemande =
   | 'en_cours_livraison_patient'                // G — médicaments en transit vers le patient
   | 'traitee'                                   // H — terminal
 
+/** États dans lesquels un patient peut supprimer sa demande (feature 010). */
+export const STATUTS_ANNULABLES: ReadonlyArray<StatutDemande> = [
+  'nouvelle_demande',
+  'medicaments_achetes_attente_transporteur',
+  'transporteur_disponible_attente_acheteur',
+] as const
+
 export type TypeEvenement =
   | 'prop_achat_envoi'               // A→B ou C→D
   | 'prop_transport'                 // A→C ou B→D

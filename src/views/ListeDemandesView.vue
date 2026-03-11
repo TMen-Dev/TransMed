@@ -110,28 +110,66 @@
         v-else
         class="demandes-list"
       >
-        <div
+        <template
           v-for="(demande, idx) in listeDemandes"
           :key="demande.id"
-          class="demande-item-wrap"
         >
-          <!-- Badge "Action requise" pour les statuts nécessitant une action du patient -->
+          <!-- Swipe-to-delete pour les demandes annulables du patient (US3 — 010) -->
+          <ion-item-sliding v-if="isPatient && STATUTS_ANNULABLES.includes(demande.statut)">
+            <ion-item
+              lines="none"
+              style="--padding-start:0;--inner-padding-end:0;--background:transparent;--min-height:0;"
+            >
+              <div style="width:100%">
+                <div
+                  v-if="STATUTS_ACTION_PATIENT.has(demande.statut)"
+                  class="action-requise-badge"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" />
+                    <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                  </svg>
+                  Action requise
+                </div>
+                <DemandeCard
+                  :demande="demande"
+                  :style="{ animationDelay: `${idx * 60}ms` }"
+                  @click="naviguerVersDetail(demande.id)"
+                />
+              </div>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option color="danger" @click.stop="confirmerSuppression(demande.id)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" slot="top">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Supprimer
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+
+          <!-- Carte standard (patient non-annulable ou aidant) -->
           <div
-            v-if="isPatient && STATUTS_ACTION_PATIENT.has(demande.statut)"
-            class="action-requise-badge"
+            v-else
+            class="demande-item-wrap"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" />
-              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-            </svg>
-            Action requise
+            <div
+              v-if="isPatient && STATUTS_ACTION_PATIENT.has(demande.statut)"
+              class="action-requise-badge"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" />
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+              </svg>
+              Action requise
+            </div>
+            <DemandeCard
+              :demande="demande"
+              :style="{ animationDelay: `${idx * 60}ms` }"
+              @click="naviguerVersDetail(demande.id)"
+            />
           </div>
-          <DemandeCard
-            :demande="demande"
-            :style="{ animationDelay: `${idx * 60}ms` }"
-            @click="naviguerVersDetail(demande.id)"
-          />
-        </div>
+        </template>
       </div>
 
       <!-- FAB Patient -->
@@ -167,12 +205,14 @@ import { useRouter } from 'vue-router'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonFab, IonFabButton, IonRefresher, IonRefresherContent,
-  modalController,
+  IonItemSliding, IonItem, IonItemOptions, IonItemOption,
+  modalController, alertController, toastController,
 } from '@ionic/vue'
 import DemandeCard from '../components/DemandeCard.vue'
 import CreationDemandeView from './CreationDemandeView.vue'
 import { useDemandeStore } from '../stores/demandes.store'
 import { useCurrentUser } from '../composables/useCurrentUser'
+import { STATUTS_ANNULABLES } from '../types/demande.types'
 
 const router = useRouter()
 const demandeStore = useDemandeStore()
@@ -216,6 +256,32 @@ async function ouvrirCreation() {
   await modal.present()
 }
 function naviguerVersDetail(id: string) { router.push(`/app/demandes/${id}`) }
+
+async function confirmerSuppression(id: string) {
+  const alert = await alertController.create({
+    header: 'Supprimer la demande',
+    message: 'Cette action est irréversible. La demande et toutes ses données seront supprimées.',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      {
+        text: 'Supprimer',
+        role: 'destructive',
+        cssClass: 'alert-btn-danger',
+        handler: async () => {
+          try {
+            await demandeStore.supprimerDemande(id)
+            const toast = await toastController.create({ message: 'Demande supprimée.', color: 'success', duration: 3000, position: 'bottom' })
+            await toast.present()
+          } catch (e) {
+            const toast = await toastController.create({ message: e instanceof Error ? e.message : 'Erreur lors de la suppression', color: 'danger', duration: 4000, position: 'bottom' })
+            await toast.present()
+          }
+        },
+      },
+    ],
+  })
+  await alert.present()
+}
 </script>
 
 <style scoped>

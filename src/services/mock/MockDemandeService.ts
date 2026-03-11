@@ -2,6 +2,7 @@
 
 import type { IDemandeService } from '../interfaces/IDemandeService'
 import type { Demande, CreateDemandeDto, StatutDemande } from '../../types/demande.types'
+import { STATUTS_ANNULABLES } from '../../types/demande.types'
 import { MOCK_DEMANDES } from './data/demandes.mock'
 import { ordonanceService } from '../index'
 
@@ -157,5 +158,15 @@ export class MockDemandeService implements IDemandeService {
     demande.emailNotifEnvoyee = true
     demande.updatedAt = new Date().toISOString()
     return { ...demande, propositions: [...demande.propositions] }
+  }
+
+  async delete(id: string): Promise<void> {
+    // Le mock n'a pas accès au contexte auth — seule l'existence est vérifiée
+    const index = this.demandes.findIndex((d) => d.id === id)
+    if (index === -1) throw new Error(`Demande introuvable : ${id}`)
+    if (!STATUTS_ANNULABLES.includes(this.demandes[index].statut)) {
+      throw new Error(`Suppression impossible : demande en cours (état ${this.demandes[index].statut})`)
+    }
+    this.demandes.splice(index, 1)
   }
 }

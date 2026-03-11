@@ -32,7 +32,10 @@ export const useChatStore = defineStore('chat', () => {
   async function sendMessage(data: SendMessageDto): Promise<Message> {
     const message = await messageService.send(data)
     const existing = messagesParDemande.value.get(data.demandeId) ?? []
-    messagesParDemande.value.set(data.demandeId, [...existing, message])
+    // Dedup : le realtime peut avoir déjà ajouté ce message pendant l'attente de la Promise
+    if (!existing.find((m) => m.id === message.id)) {
+      messagesParDemande.value.set(data.demandeId, [...existing, message])
+    }
     return message
   }
 
