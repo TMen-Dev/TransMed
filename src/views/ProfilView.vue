@@ -121,14 +121,27 @@
         </div>
 
         <!-- Badges de confiance -->
-        <div v-if="user" class="confiance-section">
-          <h3 class="section-label">Badges de confiance</h3>
-          <ConfianceBadges :user-id="user.id" :compact="false" />
+        <div
+          v-if="user"
+          class="confiance-section"
+        >
+          <h3 class="section-label">
+            Badges de confiance
+          </h3>
+          <ConfianceBadges
+            :user-id="user.id"
+            :compact="false"
+          />
         </div>
 
         <!-- Téléphone -->
-        <div v-if="user" class="tel-section">
-          <h3 class="section-label">Téléphone</h3>
+        <div
+          v-if="user"
+          class="tel-section"
+        >
+          <h3 class="section-label">
+            Téléphone
+          </h3>
           <div class="tel-input-row">
             <input
               v-model="telephone"
@@ -146,8 +159,18 @@
               {{ telLoading ? '…' : 'Enregistrer' }}
             </button>
           </div>
-          <p v-if="telSucces" class="tel-succes">✅ Téléphone enregistré</p>
-          <p v-if="telErreur" class="tel-erreur">{{ telErreur }}</p>
+          <p
+            v-if="telSucces"
+            class="tel-succes"
+          >
+            ✅ Téléphone enregistré
+          </p>
+          <p
+            v-if="telErreur"
+            class="tel-erreur"
+          >
+            {{ telErreur }}
+          </p>
         </div>
 
         <!-- Bouton déconnexion -->

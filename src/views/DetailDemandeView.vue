@@ -58,77 +58,226 @@
           class="urgence-banner"
           :class="demande.urgente ? 'urgente' : 'normale'"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
             <path
               v-if="demande.urgente"
               d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
             <path
               v-else
               d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
           </svg>
           {{ demande.urgente ? 'Demande urgente' : 'Demande non urgente' }}
         </div>
 
+        <!-- ── Banner lecture seule (aidant, statuts E/F/G/H — FR-006, feature 011) ── -->
+        <div
+          v-if="estLectureSeule"
+          class="lecture-seule-banner"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <line
+              x1="1"
+              y1="1"
+              x2="23"
+              y2="23"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span>Lecture seule — votre rôle est terminé ou en cours de traitement</span>
+        </div>
+
         <!-- ── Dernière connexion patient (visible pour les aidants) ── -->
-        <div v-if="isAidant && demande.patientId" class="last-seen-row">
-          <LastSeenBadge :user-id="demande.patientId" size="sm" />
+        <div
+          v-if="isAidant && demande.patientId"
+          class="last-seen-row"
+        >
+          <LastSeenBadge
+            :user-id="demande.patientId"
+            size="sm"
+          />
         </div>
 
         <!-- ── Statut + Timeline ── -->
-        <div class="section" style="animation-delay: 0ms">
-          <StatutBadge :statut="demande.statut" class="statut-badge" />
-          <StatutTimeline :statut="demande.statut" class="timeline-wrap" />
+        <div
+          class="section"
+          style="animation-delay: 0ms"
+        >
+          <StatutBadge
+            :statut="demande.statut"
+            class="statut-badge"
+          />
+          <StatutTimeline
+            :statut="demande.statut"
+            class="timeline-wrap"
+          />
 
-          <div v-if="notifTriggered && isAidant" class="notif-success-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <div
+            v-if="notifTriggered && isAidant"
+            class="notif-success-badge"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M20 6L9 17l-5-5"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             Notification envoyée par email
           </div>
-          <div v-if="notifEchec && isAidant" class="notif-echec-banner">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <div
+            v-if="notifEchec && isAidant"
+            class="notif-echec-banner"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M12 8v4M12 16h.01"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
             </svg>
             Notification échouée — contactez directement
           </div>
         </div>
 
         <!-- ── Médicaments ── -->
-        <div class="section card" style="animation-delay: 60ms">
+        <div
+          class="section card"
+          style="animation-delay: 60ms"
+        >
           <div class="section-header">
             <div class="section-icon green">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="4" y="2" width="16" height="20" rx="3" stroke="currentColor" stroke-width="2" />
-                <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <rect
+                  x="4"
+                  y="2"
+                  width="16"
+                  height="20"
+                  rx="3"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M8 10h8M8 14h5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
-            <h3 class="section-title">Médicaments</h3>
+            <h3 class="section-title">
+              Médicaments
+            </h3>
           </div>
           <div class="meds-list">
-            <MedicamentItem v-for="(med, i) in demande.medicaments" :key="i" :medicament="med" />
+            <MedicamentItem
+              v-for="(med, i) in demande.medicaments"
+              :key="i"
+              :medicament="med"
+            />
           </div>
           <div class="adresse-row">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="currentColor" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"
+                fill="currentColor"
+              />
             </svg>
             <span>{{ demande.adresseLivraison }}</span>
           </div>
         </div>
 
         <!-- ── Aidants engagés ── -->
-        <div v-if="demande.propositions.length" class="section card" style="animation-delay: 120ms">
+        <div
+          v-if="demande.propositions.length"
+          class="section card"
+          style="animation-delay: 120ms"
+        >
           <div class="section-header">
             <div class="section-icon terra">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
-            <h3 class="section-title">Aidants engagés</h3>
+            <h3 class="section-title">
+              Aidants engagés
+            </h3>
           </div>
           <div class="aidants-list">
             <div
@@ -137,62 +286,104 @@
               class="aidant-item"
               :style="{ animationDelay: `${idx * 60 + 120}ms` }"
             >
-              <div class="aidant-avatar">{{ prop.aidantPrenom[0] }}</div>
+              <div class="aidant-avatar">
+                {{ prop.aidantPrenom[0] }}
+              </div>
               <div class="aidant-info">
                 <span class="aidant-nom">{{ prop.aidantPrenom }}</span>
                 <span class="aidant-type">{{ LIBELLES_PROP[prop.type] }}</span>
-                <ConfianceBadges :user-id="prop.aidantId" :compact="true" />
+                <ConfianceBadges
+                  :user-id="prop.aidantId"
+                  :compact="true"
+                />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ── Ordonnance (aidant ayant proposé) ── -->
-        <div v-if="isAidant && peutVoirOrdonnance" class="section card" style="animation-delay: 180ms">
+        <!-- ── Ordonnance (visible par tout aidant authentifié) ── -->
+        <div
+          v-if="isAidant && peutVoirOrdonnance"
+          class="section card"
+          style="animation-delay: 180ms"
+        >
           <div class="section-header">
             <div class="section-icon blue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-                <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M14 2v6h6"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
-            <h3 class="section-title">Ordonnance</h3>
+            <h3 class="section-title">
+              Ordonnance
+            </h3>
           </div>
           <div class="ordonance-actions">
-            <button class="action-outline" type="button" @click="voirOrdonnance">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" />
-                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+            <button
+              class="action-outline"
+              type="button"
+              @click="voirOrdonnance"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
               </svg>
               Voir l'ordonnance
             </button>
-            <button v-if="peutTelechargerOrdonnance" class="action-outline download-btn" type="button" @click="telechargerOrdonnance">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <button
+              class="action-outline download-btn"
+              type="button"
+              @click="telechargerOrdonnance"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
               Télécharger
             </button>
           </div>
         </div>
 
-        <!-- ── Ordonnance (transporteur assigné sans proposition directe) ── -->
-        <div v-if="estTransporteur && !peutVoirOrdonnance" class="section card" style="animation-delay: 180ms">
-          <div class="section-header">
-            <div class="section-icon blue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-                <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-            </div>
-            <h3 class="section-title">Ordonnance</h3>
-          </div>
-          <button class="action-outline download-btn" type="button" @click="telechargerOrdonnance">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            Télécharger l'ordonnance
-          </button>
-        </div>
 
         <!-- ── D → E : Acheteur envoie médicaments au transporteur (scénarios 2/3) ── -->
         <div
@@ -209,8 +400,20 @@
             type="button"
             @click="envoyerMedicaments"
           >
-            <svg v-if="!envoiLoading" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+              v-if="!envoiLoading"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"
+                stroke="white"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             <span>{{ envoiLoading ? 'En cours…' : 'Médicaments envoyés au transporteur' }}</span>
           </button>
@@ -231,8 +434,20 @@
             type="button"
             @click="confirmerReceptionTransporteur"
           >
-            <svg v-if="!receptionTransporteurLoading" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+              v-if="!receptionTransporteurLoading"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M20 6L9 17l-5-5"
+                stroke="white"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             <span>{{ receptionTransporteurLoading ? 'En cours…' : 'Médicaments reçus' }}</span>
           </button>
@@ -253,8 +468,20 @@
             type="button"
             @click="confirmerRdv"
           >
-            <svg v-if="!rdvLoading" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+              v-if="!rdvLoading"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M20 6L9 17l-5-5"
+                stroke="white"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             <span>{{ rdvLoading ? 'En cours…' : 'RDV fixé avec le transporteur' }}</span>
           </button>
@@ -275,8 +502,20 @@
             type="button"
             @click="recevoirMedicaments"
           >
-            <svg v-if="!receptionLoading" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+              v-if="!receptionLoading"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M20 6L9 17l-5-5"
+                stroke="white"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             <span>{{ receptionLoading ? 'En cours…' : 'Médicaments reçus' }}</span>
           </button>
@@ -290,13 +529,28 @@
         >
           <div class="section-header">
             <div class="section-icon green">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </div>
-            <h3 class="section-title">Message du patient</h3>
+            <h3 class="section-title">
+              Message du patient
+            </h3>
           </div>
-          <p class="merci-text">"{{ demande.messageRemerciement }}"</p>
+          <p class="merci-text">
+            "{{ demande.messageRemerciement }}"
+          </p>
         </div>
 
         <!-- ── Bouton "Poser une question" (aidant, pré-chat) ── -->
@@ -305,9 +559,24 @@
           class="section"
           style="animation-delay: 280ms"
         >
-          <button class="pre-chat-btn" type="button" @click="ouvrirPreChat">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <button
+            class="pre-chat-btn"
+            type="button"
+            @click="ouvrirPreChat"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             Poser une question au patient
           </button>
@@ -334,15 +603,30 @@
             type="button"
             @click="supprimerDemande"
           >
-            <svg v-if="!suppressionLoading" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+              v-if="!suppressionLoading"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             {{ suppressionLoading ? 'Suppression…' : 'Supprimer la demande' }}
           </button>
         </div>
 
         <!-- ── Erreur action ── -->
-        <div v-if="actionError" class="action-erreur">
+        <div
+          v-if="actionError"
+          class="action-erreur"
+        >
           {{ actionError }}
         </div>
       </div>
@@ -381,7 +665,7 @@ import type { Ordonance } from '../types/ordonance.types'
 import type { TypeProposition } from '../types/proposition.types'
 import { canTransition } from '../services/demandeStateMachine'
 import { useNotification } from '../composables/useNotification'
-import { STATUTS_ANNULABLES } from '../types/demande.types'
+import { STATUTS_ANNULABLES, STATUTS_LECTURE_SEULE } from '../types/demande.types'
 
 const LIBELLES_PROP: Record<TypeProposition, string> = {
   prop_achat_envoi:    'Achat + envoi au transporteur',
@@ -421,22 +705,24 @@ const estAcheteur = computed(() =>
   currentUser.value && demande.value?.acheteurId === currentUser.value.id
 )
 
+/** Lecture seule pour l'aidant une fois le workflow en livraison ou terminé (FR-006, feature 011). */
+const estLectureSeule = computed(() =>
+  isAidant.value &&
+  !!demande.value &&
+  STATUTS_LECTURE_SEULE.includes(demande.value.statut)
+)
+
 const peutProposer = computed(() => {
   if (!demande.value) return false
+  if (estLectureSeule.value) return false  // défensif — redondant avec state machine
   return canTransition(demande.value.statut, 'prop_achat_envoi') ||
          canTransition(demande.value.statut, 'prop_transport') ||
          canTransition(demande.value.statut, 'prop_achat_transport')
 })
 
-const peutVoirOrdonnance = computed(() => {
-  if (!demande.value || !currentUser.value) return false
-  return demande.value.propositions.some((p) => p.aidantId === currentUser.value!.id)
-})
-
-const peutTelechargerOrdonnance = computed(() => {
-  if (!demande.value || !currentUser.value) return false
-  return peutVoirOrdonnance.value || !!estTransporteur.value
-})
+// Tout aidant authentifié peut voir et télécharger l'ordonnance
+// (nécessaire pour évaluer la demande avant de proposer son aide)
+const peutVoirOrdonnance = computed(() => isAidant.value)
 
 onMounted(async () => {
   const id = route.params.id as string
@@ -468,8 +754,20 @@ async function onCharteAcceptee() {
   // La navigation sera déclenchée par pendingAction dans useCharteAidant
 }
 
-function telechargerOrdonnance() {
-  showToast('Téléchargement simulé — ordonnance.jpg', 'success', 3000)
+async function telechargerOrdonnance() {
+  if (!demande.value) return
+  try {
+    if (!ordonanceData.value) {
+      ordonanceData.value = await ordonanceService.getByDemandeId(demande.value.id)
+    }
+    if (ordonanceData.value.signedUrl) {
+      window.open(ordonanceData.value.signedUrl, '_blank')
+    } else {
+      await showToast('URL de téléchargement non disponible', 'warning', 3000)
+    }
+  } catch (e) {
+    actionError.value = e instanceof Error ? e.message : 'Erreur lors du téléchargement'
+  }
 }
 
 async function voirOrdonnance() {
@@ -635,6 +933,10 @@ async function recevoirMedicaments() {
 .action-btn.blue:hover:not(:disabled) { background: #1A5C96; }
 
 .action-erreur { background: #FDEDEC; color: #C0392B; border-radius: 8px; padding: 10px 14px; font-size: 0.84rem; }
+
+/* Banner lecture seule — mobile-first, min-height 44px pour touch target (feature 011) */
+.lecture-seule-banner { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px; background: #F0EDE8; border: 1.5px solid #D4C9BE; border-radius: 10px; color: #7A6E65; font-size: 0.84rem; font-weight: 600; margin-bottom: 8px; animation: tmFadeUp 0.3s ease both; }
+.lecture-seule-banner svg { flex-shrink: 0; opacity: 0.7; }
 
 .urgence-banner { display: flex; align-items: center; gap: 8px; border-radius: 10px; padding: 10px 14px; font-size: 0.86rem; font-weight: 700; margin-bottom: 6px; animation: tmFadeUp 0.3s ease both; }
 .urgence-banner.urgente { background: #FDEDEC; color: #C0392B; border: 1.5px solid #F1AAA5; }

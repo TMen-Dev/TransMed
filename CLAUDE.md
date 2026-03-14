@@ -58,4 +58,11 @@ TypeScript 5+ (strict mode): Follow standard conventions
 - Ordre cascade : Storage.remove → ordonnances → messages → propositions → demandes
 - `STATUTS_ANNULABLES` : `nouvelle_demande`, `medicaments_achetes_attente_transporteur`, `transporteur_disponible_attente_acheteur`
 - `router.replace('/app/demandes')` après succès (pas `push` pour éviter back vers demande supprimée)
+
+### Visibilité aidant & lecture seule (feature 011)
+- `STATUTS_LECTURE_SEULE` : `en_cours_livraison_transporteur`, `rdv_a_fixer`, `en_cours_livraison_patient`, `traitee` (E/F/G/H) — dans `src/types/demande.types.ts`
+- `estLectureSeule` computed dans `DetailDemandeView.vue` : `isAidant && STATUTS_LECTURE_SEULE.includes(demande.statut)` → masque `peutProposer` + affiche `.lecture-seule-banner`
+- Banner mobile-first : `min-height: 44px` (touch target), fond `#F0EDE8`, icône œil barré SVG — pas de `ion-note` (style custom cohérent avec les autres banners)
+- RLS migration 010 : fonction `aidant_a_propose_sur(demande_id)` SECURITY DEFINER — aidant avec proposition voit sa demande jusqu'au statut H
+- ⚠️ PIÈGE RLS : `EXISTS (SELECT FROM propositions)` dans `demandes_select` → récursion infinie car `propositions_select` fait `EXISTS (SELECT FROM demandes)`. Toujours utiliser une fonction SECURITY DEFINER pour briser la boucle entre tables avec des politiques croisées
 <!-- MANUAL ADDITIONS END -->

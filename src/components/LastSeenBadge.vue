@@ -1,6 +1,13 @@
 <template>
-  <span class="last-seen-badge" :class="[size, { online: isOnline }]" :style="{ color }">
-    <span v-if="isOnline" class="online-dot" />
+  <span
+    class="last-seen-badge"
+    :class="[size, { online: isOnline }]"
+    :style="{ color }"
+  >
+    <span
+      v-if="isOnline"
+      class="online-dot"
+    />
     {{ label }}
   </span>
 </template>

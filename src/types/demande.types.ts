@@ -13,6 +13,14 @@ export type StatutDemande =
   | 'en_cours_livraison_patient'                // G — médicaments en transit vers le patient
   | 'traitee'                                   // H — terminal
 
+/** États dans lesquels un aidant impliqué ne peut plus agir (lecture seule — feature 011). */
+export const STATUTS_LECTURE_SEULE: ReadonlyArray<StatutDemande> = [
+  'en_cours_livraison_transporteur', // E
+  'rdv_a_fixer',                     // F
+  'en_cours_livraison_patient',      // G
+  'traitee',                         // H
+] as const
+
 /** États dans lesquels un patient peut supprimer sa demande (feature 010). */
 export const STATUTS_ANNULABLES: ReadonlyArray<StatutDemande> = [
   'nouvelle_demande',

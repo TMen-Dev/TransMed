@@ -18,7 +18,10 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content ref="ionContentRef" :fullscreen="true">
+    <ion-content
+      ref="ionContentRef"
+      :fullscreen="true"
+    >
       <div class="messages-container">
         <!-- État vide -->
         <div

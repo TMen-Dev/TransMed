@@ -6,7 +6,7 @@ import type { Demande, CreateDemandeDto, StatutDemande, TypeEvenement } from '..
 import { demandeService } from '../services/index'
 import { applyTransition, canTransition } from '../services/demandeStateMachine'
 
-const STATUTS_ACTIFS_AIDANT: StatutDemande[] = [
+export const STATUTS_ACTIFS_AIDANT: StatutDemande[] = [
   'nouvelle_demande',
   'medicaments_achetes_attente_transporteur',
   'transporteur_disponible_attente_acheteur',

@@ -4,9 +4,23 @@
       <ion-toolbar>
         <ion-title>Charte TransMed</ion-title>
         <ion-buttons slot="end">
-          <button class="close-btn" type="button" @click="$emit('fermer')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <button
+            class="close-btn"
+            type="button"
+            @click="$emit('fermer')"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M18 6L6 18M6 6l12 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
             </svg>
           </button>
         </ion-buttons>
@@ -16,12 +30,25 @@
     <ion-content class="charte-content">
       <div class="charte-body">
         <div class="charte-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#1B8C5A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+              stroke="#1B8C5A"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </div>
 
-        <h2 class="charte-titre">Engagements de l'aidant</h2>
+        <h2 class="charte-titre">
+          Engagements de l'aidant
+        </h2>
         <p class="charte-intro">
           En vous proposant ou en posant une question, vous acceptez de respecter ces engagements :
         </p>
@@ -29,9 +56,27 @@
         <div class="charte-items">
           <div class="charte-item">
             <div class="item-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="11" width="18" height="11" rx="2" stroke="#1B8C5A" stroke-width="1.8" />
-                <path d="M7 11V7a5 5 0 0110 0v4" stroke="#1B8C5A" stroke-width="1.8" stroke-linecap="round" />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <rect
+                  x="3"
+                  y="11"
+                  width="18"
+                  height="11"
+                  rx="2"
+                  stroke="#1B8C5A"
+                  stroke-width="1.8"
+                />
+                <path
+                  d="M7 11V7a5 5 0 0110 0v4"
+                  stroke="#1B8C5A"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
             <div class="item-content">
@@ -42,9 +87,25 @@
 
           <div class="charte-item">
             <div class="item-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="#1B8C5A" stroke-width="1.8" />
-                <path d="M12 6v6l4 2" stroke="#1B8C5A" stroke-width="1.8" stroke-linecap="round" />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="#1B8C5A"
+                  stroke-width="1.8"
+                />
+                <path
+                  d="M12 6v6l4 2"
+                  stroke="#1B8C5A"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
             <div class="item-content">
@@ -55,8 +116,18 @@
 
           <div class="charte-item">
             <div class="item-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#1B8C5A" stroke-width="1.8" stroke-linecap="round" />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
+                  stroke="#1B8C5A"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
               </svg>
             </div>
             <div class="item-content">
@@ -69,12 +140,31 @@
     </ion-content>
 
     <ion-footer class="charte-footer">
-      <button class="btn-annuler" type="button" @click="$emit('fermer')">
+      <button
+        class="btn-annuler"
+        type="button"
+        @click="$emit('fermer')"
+      >
         Annuler
       </button>
-      <button class="btn-accepter" type="button" @click="$emit('accepter')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      <button
+        class="btn-accepter"
+        type="button"
+        @click="$emit('accepter')"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <path
+            d="M20 6L9 17l-5-5"
+            stroke="white"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
         J'accepte et je continue
       </button>

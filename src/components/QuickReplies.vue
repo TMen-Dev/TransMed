@@ -1,5 +1,8 @@
 <template>
-  <div v-if="visible" class="quick-replies">
+  <div
+    v-if="visible"
+    class="quick-replies"
+  >
     <span class="quick-label">Suggestions :</span>
     <div class="quick-chips">
       <button

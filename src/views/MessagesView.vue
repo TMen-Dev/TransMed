@@ -7,21 +7,49 @@
     </ion-header>
 
     <ion-content :fullscreen="true">
-      <div v-if="loading" class="loading-pad">
-        <div v-for="i in 4" :key="i" class="skeleton-row" />
+      <div
+        v-if="loading"
+        class="loading-pad"
+      >
+        <div
+          v-for="i in 4"
+          :key="i"
+          class="skeleton-row"
+        />
       </div>
 
-      <div v-else-if="conversations.length === 0" class="empty-state">
+      <div
+        v-else-if="conversations.length === 0"
+        class="empty-state"
+      >
         <div class="empty-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#1B8C5A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <path
+              d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+              stroke="#1B8C5A"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </div>
-        <p class="empty-title">Aucune conversation</p>
-        <p class="empty-hint">Vos échanges avec les aidants ou patients apparaîtront ici.</p>
+        <p class="empty-title">
+          Aucune conversation
+        </p>
+        <p class="empty-hint">
+          Vos échanges avec les aidants ou patients apparaîtront ici.
+        </p>
       </div>
 
-      <div v-else class="conv-list">
+      <div
+        v-else
+        class="conv-list"
+      >
         <div
           v-for="conv in conversations"
           :key="conv.demandeId"
@@ -37,7 +65,10 @@
           <div class="conv-body">
             <!-- Ligne 1 : nom + badge non-lus -->
             <div class="conv-top">
-              <span class="conv-nom" :class="{ 'conv-nom--unread': conv.unreadCount > 0 }">
+              <span
+                class="conv-nom"
+                :class="{ 'conv-nom--unread': conv.unreadCount > 0 }"
+              >
                 {{ conv.nomDemande }}
               </span>
               <span

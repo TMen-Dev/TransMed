@@ -1,29 +1,91 @@
 <template>
-  <div class="confiance-badges" :class="{ compact }">
-    <span v-if="badges.emailVerifie" class="badge badge-email" :class="{ compact }">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  <div
+    class="confiance-badges"
+    :class="{ compact }"
+  >
+    <span
+      v-if="badges.emailVerifie"
+      class="badge badge-email"
+      :class="{ compact }"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M20 6L9 17l-5-5"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
       {{ compact ? 'Email' : 'Email vérifié' }}
     </span>
 
-    <span v-if="badges.telephoneRenseigne" class="badge badge-tel" :class="{ compact }">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+    <span
+      v-if="badges.telephoneRenseigne"
+      class="badge badge-tel"
+      :class="{ compact }"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M20 6L9 17l-5-5"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
       </svg>
       {{ compact ? 'Tél.' : 'Téléphone renseigné' }}
     </span>
 
-    <span v-if="badges.nbLivraisonsReussies > 0" class="badge badge-livraisons" :class="{ compact }">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-        <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-        <circle cx="5.5" cy="18.5" r="2.5" stroke="currentColor" stroke-width="1.8" />
-        <circle cx="18.5" cy="18.5" r="2.5" stroke="currentColor" stroke-width="1.8" />
+    <span
+      v-if="badges.nbLivraisonsReussies > 0"
+      class="badge badge-livraisons"
+      :class="{ compact }"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        />
+        <circle
+          cx="5.5"
+          cy="18.5"
+          r="2.5"
+          stroke="currentColor"
+          stroke-width="1.8"
+        />
+        <circle
+          cx="18.5"
+          cy="18.5"
+          r="2.5"
+          stroke="currentColor"
+          stroke-width="1.8"
+        />
       </svg>
       {{ badges.nbLivraisonsReussies }} livraison{{ badges.nbLivraisonsReussies > 1 ? 's' : '' }}
     </span>
 
-    <span v-if="!badges.emailVerifie && !badges.telephoneRenseigne && badges.nbLivraisonsReussies === 0" class="no-badges">
+    <span
+      v-if="!badges.emailVerifie && !badges.telephoneRenseigne && badges.nbLivraisonsReussies === 0"
+      class="no-badges"
+    >
       Aucun badge pour l'instant
     </span>
   </div>
