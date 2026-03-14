@@ -18,4 +18,18 @@ export interface IUserService {
    * @throws Error('Identifiants incorrects') si aucune correspondance
    */
   authenticate(email: string, password: string): Promise<Utilisateur>
+
+  /**
+   * Vérifie le code OTP reçu par email et finalise la création du compte.
+   * @throws Error('Code invalide ou expiré') si le token est incorrect
+   */
+  verifyOtpAndComplete(
+    email: string,
+    token: string,
+    prenom: string,
+    role: 'patient' | 'aidant'
+  ): Promise<Utilisateur>
+
+  /** Renvoie l'email de vérification (OTP ou lien de confirmation). */
+  resendVerificationEmail(email: string): Promise<void>
 }

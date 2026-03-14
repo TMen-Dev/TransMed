@@ -2,7 +2,7 @@
 
 import { createRouter, createWebHistory } from '@ionic/vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '../stores/auth.store'
+import { useAuthStore, sessionReadyPromise } from '../stores/auth.store'
 import { useDemandeStore } from '../stores/demandes.store'
 
 // Flag module-level pour éviter la boucle de redirection post-login
@@ -60,6 +60,7 @@ const router = createRouter({
 
 // Gardes de navigation
 router.beforeEach(async (to) => {
+  await sessionReadyPromise
   const authStore = useAuthStore()
   const isAuthenticated = authStore.currentUser !== null
 
@@ -78,15 +79,19 @@ router.beforeEach(async (to) => {
     redirectionConfirmDone = true // set avant l'async pour éviter les boucles
     const user = authStore.currentUser
     if (user?.role === 'patient') {
-      const demandeStore = useDemandeStore()
-      if (!demandeStore.demandes.length) await demandeStore.fetchForPatient(user.id)
-      const STATUTS_ACTION_PATIENT = ['rdv_a_fixer', 'en_cours_livraison_patient'] as const
-      const demandeEnAttente = demandeStore.demandes.find(
-        (d) => d.patientId === user.id &&
-               STATUTS_ACTION_PATIENT.includes(d.statut as typeof STATUTS_ACTION_PATIENT[number]) &&
-               d.emailNotifEnvoyee,
-      )
-      if (demandeEnAttente) return `/app/demandes/${demandeEnAttente.id}`
+      try {
+        const demandeStore = useDemandeStore()
+        if (!demandeStore.demandes.length) await demandeStore.fetchForPatient(user.id)
+        const STATUTS_ACTION_PATIENT = ['rdv_a_fixer', 'en_cours_livraison_patient'] as const
+        const demandeEnAttente = demandeStore.demandes.find(
+          (d) => d.patientId === user.id &&
+                 STATUTS_ACTION_PATIENT.includes(d.statut as typeof STATUTS_ACTION_PATIENT[number]) &&
+                 d.emailNotifEnvoyee,
+        )
+        if (demandeEnAttente) return `/app/demandes/${demandeEnAttente.id}`
+      } catch {
+        // Non bloquant — si le fetch échoue, on laisse passer vers /app/demandes
+      }
     }
   }
 })

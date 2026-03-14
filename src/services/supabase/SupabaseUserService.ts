@@ -40,6 +40,14 @@ export class SupabaseUserService implements IUserService {
       throw new Error(signUpError?.message ?? 'Erreur lors de la création du compte')
     }
 
+    // Supabase a renvoyé un utilisateur mais pas de session :
+    // la confirmation email est activée → un code OTP a été envoyé.
+    // On ne peut pas écrire le profil maintenant (pas de session RLS).
+    // La vue doit passer en mode "verify" pour saisir le code.
+    if (!authData.session) {
+      throw new Error('EMAIL_VERIFICATION_REQUIRED')
+    }
+
     const userId = authData.user.id
 
     const { error: profileError } = await supabase
@@ -64,6 +72,48 @@ export class SupabaseUserService implements IUserService {
       charteAcceptedAt: null,
       telephone: null,
     }
+  }
+
+  async verifyOtpAndComplete(
+    email: string,
+    token: string,
+    prenom: string,
+    role: 'patient' | 'aidant'
+  ): Promise<Utilisateur> {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'signup',
+    })
+
+    if (error || !data.user) {
+      throw new Error('Code invalide ou expiré. Vérifiez et réessayez.')
+    }
+
+    const userId = data.user.id
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ prenom, role })
+      .eq('id', userId)
+
+    if (profileError) throw new Error(`Erreur profil : ${profileError.message}`)
+
+    return {
+      id: userId,
+      prenom,
+      role,
+      email,
+      createdAt: new Date().toISOString(),
+      lastSeenAt: null,
+      charteAcceptedAt: null,
+      telephone: null,
+    }
+  }
+
+  async resendVerificationEmail(email: string): Promise<void> {
+    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    if (error) throw new Error('Impossible de renvoyer le code. Réessayez dans quelques instants.')
   }
 
   async authenticate(email: string, password: string): Promise<Utilisateur> {

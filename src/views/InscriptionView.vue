@@ -210,6 +210,112 @@
           </div>
         </div>
 
+        <!-- Mode vérification email -->
+        <div
+          v-else-if="mode === 'verify'"
+          class="inscription-card"
+          style="animation-delay: 0.05s"
+        >
+          <div class="card-header">
+            <h2 class="card-title">
+              Vérifiez votre email
+            </h2>
+            <p class="card-subtitle">
+              Un code à 6 chiffres a été envoyé à <strong>{{ pendingEmail }}</strong>
+            </p>
+          </div>
+
+          <div class="card-body">
+            <!-- Icône mail -->
+            <div class="verify-icon-wrap">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect width="48" height="48" rx="14" fill="#E8F7F0" />
+                <path d="M10 16h28c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H10c-1.1 0-2-.9-2-2V18c0-1.1.9-2 2-2z" stroke="#1B8C5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M40 18L24 28 8 18" stroke="#1B8C5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="36" cy="34" r="7" fill="#1B8C5A" />
+                <path d="M33 34l2 2 4-4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <p class="verify-hint">Vérifiez aussi vos spams</p>
+            </div>
+
+            <!-- Saisie du code -->
+            <div class="field-group">
+              <label class="field-label" for="otp-input">Code de vérification</label>
+              <div class="input-wrapper otp-wrapper" :class="{ 'input-focused': otpFocused }">
+                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <input
+                  id="otp-input"
+                  v-model="verifyCode"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="6"
+                  class="text-input otp-input"
+                  placeholder="_ _ _ _ _ _"
+                  autocomplete="one-time-code"
+                  @focus="otpFocused = true"
+                  @blur="otpFocused = false"
+                  @input="verifyCode = (($event.target as HTMLInputElement).value).replace(/\D/g, '')"
+                  @keyup.enter="verifierCode"
+                >
+              </div>
+            </div>
+
+            <!-- Erreur -->
+            <div v-if="verifyError" class="erreur-msg" role="alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              {{ verifyError }}
+            </div>
+
+            <!-- Message succès renvoi -->
+            <div v-if="resendMessage" class="succes-msg" role="status">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              {{ resendMessage }}
+            </div>
+
+            <!-- Bouton vérifier -->
+            <button
+              class="submit-btn"
+              :class="{ 'submit-disabled': verifyCode.length < 6 || verifyLoading }"
+              :disabled="verifyCode.length < 6 || verifyLoading"
+              type="button"
+              @click="verifierCode"
+            >
+              <span>{{ verifyLoading ? 'Vérification…' : 'Confirmer le code' }}</span>
+              <svg v-if="!verifyLoading" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+
+            <!-- Renvoyer le code -->
+            <div class="resend-row">
+              <span class="resend-label">Vous n'avez pas reçu le code ?</span>
+              <button
+                class="secondary-link"
+                type="button"
+                :disabled="resendLoading"
+                @click="renvoyerCode"
+              >
+                {{ resendLoading ? 'Envoi…' : 'Renvoyer' }}
+              </button>
+            </div>
+
+            <!-- Retour -->
+            <button class="secondary-link" type="button" @click="mode = 'register'">
+              ← Modifier mes informations
+            </button>
+          </div>
+        </div>
+
         <!-- Mode inscription -->
         <div
           v-else
@@ -551,13 +657,14 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { IonPage, IonContent } from '@ionic/vue'
 import { useAuthStore } from '../stores/auth.store'
+import { userService } from '../services/index'
 import type { RoleUtilisateur } from '../types/user.types'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-// Mode : 'login' | 'register'
-const mode = ref<'login' | 'register'>('login')
+// Mode : 'login' | 'register' | 'verify'
+const mode = ref<'login' | 'register' | 'verify'>('login')
 
 // Login state
 const email = ref('')
@@ -578,6 +685,15 @@ const role = ref<RoleUtilisateur | ''>('')
 const erreur = ref('')
 const inputFocused = ref(false)
 const registerLoading = ref(false)
+
+// Verify state
+const pendingEmail = ref('')
+const verifyCode = ref('')
+const verifyLoading = ref(false)
+const verifyError = ref('')
+const otpFocused = ref(false)
+const resendLoading = ref(false)
+const resendMessage = ref('')
 
 const loginValide = computed(() => email.value.trim().length > 0 && password.value.length > 0)
 const formValide = computed(
@@ -638,9 +754,56 @@ async function valider() {
     )
     await router.replace('/app/demandes')
   } catch (e) {
+    if (e instanceof Error && e.message === 'EMAIL_VERIFICATION_REQUIRED') {
+      // Confirmation email activée → passer en mode vérification OTP
+      pendingEmail.value = regEmail.value.trim()
+      verifyCode.value = ''
+      verifyError.value = ''
+      resendMessage.value = ''
+      mode.value = 'verify'
+      return
+    }
     erreur.value = e instanceof Error ? e.message : "Erreur lors de la création du compte."
   } finally {
     registerLoading.value = false
+  }
+}
+
+async function verifierCode() {
+  if (verifyCode.value.length < 6 || verifyLoading.value) return
+  verifyError.value = ''
+  resendMessage.value = ''
+  verifyLoading.value = true
+  try {
+    await authStore.verifyEmailAndComplete(
+      pendingEmail.value,
+      verifyCode.value,
+      prenom.value.trim(),
+      role.value as RoleUtilisateur
+    )
+  } catch (e) {
+    verifyError.value = e instanceof Error ? e.message : 'Code invalide ou expiré.'
+    verifyLoading.value = false
+    return
+  }
+  verifyLoading.value = false
+  // Rechargement complet pour repartir d'un état propre avec la session Supabase confirmée.
+  // router.replace() peut accrocher à cause de la race condition onAuthStateChange + guard.
+  window.location.replace('/app/demandes')
+}
+
+async function renvoyerCode() {
+  if (resendLoading.value) return
+  resendLoading.value = true
+  resendMessage.value = ''
+  verifyError.value = ''
+  try {
+    await userService.resendVerificationEmail(pendingEmail.value)
+    resendMessage.value = 'Un nouveau code a été envoyé.'
+  } catch (e) {
+    verifyError.value = e instanceof Error ? e.message : 'Erreur lors du renvoi.'
+  } finally {
+    resendLoading.value = false
   }
 }
 </script>
@@ -898,6 +1061,60 @@ ion-content { --background: #F7F3ED; }
   transition: color 0.15s;
 }
 .secondary-link:hover { color: var(--tm-primary-dark); }
+
+/* ── Vérification OTP ── */
+.verify-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+
+.verify-hint {
+  font-size: 0.82rem;
+  color: var(--tm-muted);
+  margin: 0;
+}
+
+.otp-wrapper { height: 58px; }
+
+.otp-input {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-align: center;
+  color: var(--tm-text);
+}
+
+.otp-input::placeholder {
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  color: #C4C9D4;
+}
+
+.succes-msg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #1B8C5A;
+  font-size: 0.85rem;
+  background: #E8F7F0;
+  border: 1px solid #A7D9C0;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.resend-label { color: var(--tm-muted); }
 
 /* ── Animations ── */
 @keyframes fadeDown {

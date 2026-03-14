@@ -34,6 +34,20 @@ export class MockUserService implements IUserService {
     return { ...utilisateur }
   }
 
+  async verifyOtpAndComplete(
+    email: string,
+    _token: string,
+    prenom: string,
+    role: 'patient' | 'aidant'
+  ): Promise<Utilisateur> {
+    // Mode mock : le code est toujours accepté
+    return this.create({ prenom, role, email, password: '' })
+  }
+
+  async resendVerificationEmail(_email: string): Promise<void> {
+    // no-op en mode mock
+  }
+
   async authenticate(email: string, password: string): Promise<Utilisateur> {
     const credential = MOCK_CREDENTIALS.find(
       (c) => c.email.toLowerCase() === email.toLowerCase().trim() && c.password === password

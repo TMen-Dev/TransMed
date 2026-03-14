@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import router from './router'
 import App from './App.vue'
+import { useAuthStore } from './stores/auth.store'
 
 /* Ionic core CSS */
 import '@ionic/vue/css/core.css'
@@ -28,6 +29,10 @@ const app = createApp(App)
   .use(IonicVue)
   .use(pinia)
   .use(router)
+
+// Lancer initSession immédiatement — le guard attend sessionReadyPromise
+const authStore = useAuthStore()
+authStore.initSession()
 
 router.isReady().then(() => {
   app.mount('#app')
