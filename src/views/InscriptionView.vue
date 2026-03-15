@@ -787,9 +787,7 @@ async function verifierCode() {
     return
   }
   verifyLoading.value = false
-  // Rechargement complet pour repartir d'un état propre avec la session Supabase confirmée.
-  // router.replace() peut accrocher à cause de la race condition onAuthStateChange + guard.
-  window.location.replace('/app/demandes')
+  await router.replace('/app/demandes')
 }
 
 async function renvoyerCode() {

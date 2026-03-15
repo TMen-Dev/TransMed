@@ -1,7 +1,7 @@
 import type { IUserService } from '../interfaces/IUserService'
 import type { Utilisateur, CreateUtilisateurDto } from '../../types/user.types'
 import type { BadgeConfiance } from '../../types/confiance.types'
-import { supabase } from '../../lib/supabase'
+import { supabase, makeFreshSupabaseClient } from '../../lib/supabase'
 
 export class SupabaseUserService implements IUserService {
   async getAll(): Promise<Utilisateur[]> {
@@ -80,7 +80,11 @@ export class SupabaseUserService implements IUserService {
     prenom: string,
     role: 'patient' | 'aidant'
   ): Promise<Utilisateur> {
-    const { data, error } = await supabase.auth.verifyOtp({
+    // Client frais — contourne le deadlock initializePromise du singleton
+    // (même cause que le bug Camera/Gallery sur Huawei EMUI)
+    const db = makeFreshSupabaseClient()
+
+    const { data, error } = await db.auth.verifyOtp({
       email,
       token,
       type: 'signup',
@@ -92,7 +96,7 @@ export class SupabaseUserService implements IUserService {
 
     const userId = data.user.id
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await db
       .from('profiles')
       .update({ prenom, role })
       .eq('id', userId)

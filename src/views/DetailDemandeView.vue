@@ -662,6 +662,9 @@ import { useDemandeRealtime } from '../composables/useDemandeRealtime'
 import { useCharteAidant } from '../composables/useCharteAidant'
 import { ordonanceService } from '../services/index'
 import type { Ordonance } from '../types/ordonance.types'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
+import { Capacitor } from '@capacitor/core'
 import type { TypeProposition } from '../types/proposition.types'
 import { canTransition } from '../services/demandeStateMachine'
 import { useNotification } from '../composables/useNotification'
@@ -760,11 +763,82 @@ async function telechargerOrdonnance() {
     if (!ordonanceData.value) {
       ordonanceData.value = await ordonanceService.getByDemandeId(demande.value.id)
     }
-    if (ordonanceData.value.signedUrl) {
-      window.open(ordonanceData.value.signedUrl, '_blank')
-    } else {
-      await showToast('URL de téléchargement non disponible', 'warning', 3000)
+    const url = ordonanceData.value.signedUrl
+    if (!url) {
+      actionError.value = 'URL de téléchargement non disponible'
+      return
     }
+
+    // Télécharger le fichier en base64
+    const response = await fetch(url)
+    const blob = await response.blob()
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve((reader.result as string).split(',')[1])
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+
+    const ext = ordonanceData.value.mimeType === 'application/pdf' ? 'pdf'
+      : ordonanceData.value.mimeType === 'image/png' ? 'png' : 'jpg'
+    const fileName = `ordonnance_${demande.value.id.slice(0, 8)}.${ext}`
+
+    const platform = Capacitor.getPlatform()
+
+    if (platform === 'web') {
+      // Web : téléchargement classique via lien
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      a.click()
+      return
+    }
+
+    // iOS : Documents (accessible dans Fichiers > Sur mon iPhone > TransMed)
+    // Android : Downloads public (Fichiers > Téléchargements) avec fallback app-privé
+    let savedUri: string
+    let locationLabel: string
+
+    if (platform === 'ios') {
+      await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Documents, recursive: true })
+      const r = await Filesystem.getUri({ path: fileName, directory: Directory.Documents })
+      savedUri = r.uri
+      locationLabel = 'Fichiers → Sur mon iPhone → TransMed'
+    } else {
+      // Android : essayer Downloads public d'abord
+      try {
+        await Filesystem.writeFile({ path: `Download/${fileName}`, data: base64, directory: Directory.ExternalStorage, recursive: true })
+        const r = await Filesystem.getUri({ path: `Download/${fileName}`, directory: Directory.ExternalStorage })
+        savedUri = r.uri
+        locationLabel = 'Fichiers → Téléchargements'
+      } catch {
+        // Fallback Android 11+ (scoped storage) → dossier app externe
+        await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.External, recursive: true })
+        const r = await Filesystem.getUri({ path: fileName, directory: Directory.External })
+        savedUri = r.uri
+        locationLabel = 'Fichiers → Stockage interne → Android → data → com.transmed.app → files'
+      }
+    }
+
+    // Popup claire — reste à l'écran jusqu'à action
+    const alert = await alertController.create({
+      header: 'Ordonnance enregistrée',
+      message: `"${fileName}" enregistré dans :\n\n${locationLabel}`,
+      buttons: [
+        { text: 'Fermer', role: 'cancel' },
+        { text: 'Partager', role: 'confirm' },
+      ],
+    })
+    await alert.present()
+    const { role } = await alert.onDidDismiss()
+    if (role !== 'confirm') return
+
+    // Partage optionnel (WhatsApp, Drive, etc.)
+    await Share.share({
+      title: 'Ordonnance',
+      url: savedUri,
+      dialogTitle: 'Partager ou envoyer l\'ordonnance',
+    })
   } catch (e) {
     actionError.value = e instanceof Error ? e.message : 'Erreur lors du téléchargement'
   }

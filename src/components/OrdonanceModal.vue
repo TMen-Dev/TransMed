@@ -18,12 +18,28 @@
           class="ordonance-img"
           alt="Ordonnance"
         >
-        <iframe
+        <!-- PDF : <object> fonctionne sur Android et iOS WKWebView -->
+        <div
           v-else
-          :src="signedUrl || base64Data"
-          class="ordonance-pdf"
-          title="Ordonnance PDF"
-        />
+          class="ordonance-pdf-wrapper"
+        >
+          <object
+            :data="signedUrl || base64Data"
+            type="application/pdf"
+            class="ordonance-pdf"
+          >
+            <!-- Fallback iOS : lien direct si <object> non supporté -->
+            <div class="pdf-fallback">
+              <p>Votre appareil ne peut pas afficher ce PDF directement.</p>
+              <a
+                :href="signedUrl || base64Data"
+                target="_blank"
+                rel="noopener"
+                class="pdf-open-link"
+              >Ouvrir le PDF</a>
+            </div>
+          </object>
+        </div>
       </div>
     </ion-content>
   </ion-page>
@@ -55,9 +71,38 @@ defineProps<{
   box-shadow: 0 4px 20px rgba(26, 21, 16, 0.12);
 }
 
+.ordonance-pdf-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .ordonance-pdf {
   width: 100%;
   height: 100%;
   border: none;
+  flex: 1;
+}
+
+.pdf-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px;
+  text-align: center;
+  color: var(--ion-color-medium);
+}
+
+.pdf-open-link {
+  display: inline-block;
+  padding: 10px 24px;
+  background: var(--ion-color-primary);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
 }
 </style>
